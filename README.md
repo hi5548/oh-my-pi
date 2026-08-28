@@ -22,6 +22,9 @@
   Fork of <a href="https://github.com/badlogic/pi-mono">Pi</a> by <a href="https://github.com/mariozechner">@mariozechner</a> 
 </p>
 
+> [!IMPORTANT]
+> **这是 oh-my-pi 的简体中文分支（中文版）**，由 [@hi5548](https://github.com/hi5548) 维护：TUI 界面、斜杠命令、CLI 帮助均已中文化，本页所有安装命令安装的都是**中文版**。原版（英文）见上游仓库 [can1357/oh-my-pi](https://github.com/can1357/oh-my-pi)。中文说明书：[README.zh-CN.md](README.zh-CN.md)。
+
 The most capable agent surface that ships. Continuously tuned by real-world use — complete out of the box, open all the way down.
 
 **60+** providers · **31** built-in tools · **14** lsp ops · **28** dap ops · **~80k** lines of Rust core.
@@ -32,66 +35,37 @@ The most capable agent surface that ships. Continuously tuned by real-world use 
 > while we evaluate how open contributions go. Depending on the results, the
 > vouch system may return.
 
-## Install
+## Install（安装中文版）
 
-**macOS · Linux**
+**macOS · Linux（一键安装中文版，推荐）**
 
 ```sh
-curl -fsSL https://omp.sh/install | sh
+curl -fsSL https://raw.githubusercontent.com/hi5548/oh-my-pi/main/install-cn.sh | bash
 ```
 
 > **Alpine / musl:** the prebuilt musl binary links `libstdc++`/`libgcc` dynamically, which stock Alpine does not ship. Install them first: `apk add libstdc++ libgcc`.
 
-**Homebrew**
+**macOS · Linux（手动克隆安装）**
 
 ```sh
-brew install can1357/tap/omp
+git clone https://github.com/hi5548/oh-my-pi.git
+cd oh-my-pi
+bash install-cn.sh
 ```
 
-**Bun (recommended)**
+安装脚本会自动完成：安装 Bun（如缺失）→ 安装依赖（默认下载源失败自动切换国内镜像）→ 下载平台加速引擎 → 构建中文版 → 创建 `omp` 命令 → 验证安装。
 
-```sh
-bun install -g @oh-my-pi/pi-coding-agent
-```
+**安装后使用**
 
-**Nix**
+在任意位置输入 `omp` 即可启动中文版；会话内输入 `/` 查看全部中文命令。
 
-```sh
-# Run without installing
-nix run github:can1357/oh-my-pi
+**Nix / Homebrew / npm 用户**
 
-# Or install into the active profile
-nix profile install github:can1357/oh-my-pi
-```
+官方的 Nix、Homebrew、npm 渠道安装的是**英文原版**。中文版请使用上方的安装脚本（macOS / Linux）。
 
-Flake consumers can use `packages.<system>.omp`, `overlays.default`, `nixosModules.default`, or `homeManagerModules.default`. A Home Manager configuration can install OMP and own its settings declaratively:
+**要求**
 
-```nix
-{
-  inputs.omp.url = "github:can1357/oh-my-pi";
-
-  # In your Home Manager module:
-  imports = [ inputs.omp.homeManagerModules.default ];
-  programs.omp = {
-    enable = true;
-    settings.startup.quiet = true;
-  };
-}
-```
-
-**Windows (PowerShell)**
-
-```powershell
-irm https://omp.sh/install.ps1 | iex
-```
-
-**Pinned versions (mise)**
-
-```sh
-mise use -g github:can1357/oh-my-pi
-```
-
-macOS · Linux · Windows · bun ≥ 1.3.14
+macOS 或 Linux · bun ≥ 1.3.14（安装脚本会自动安装 Bun）· Windows 暂不支持本脚本，可参考上游仓库手动构建英文原版。
 
 ### Shell completions
 
