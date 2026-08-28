@@ -14,8 +14,8 @@ const MAX_VISIBLE_MODELS = 10;
 const BROWSER_FRAME_ROWS = 5;
 
 class ModelSceneController implements SetupSceneController {
-	title = "Choose your default model";
-	subtitle = "Search configured models and save the model used for new sessions.";
+	title = "选择默认模型";
+	subtitle = "搜索已配置的模型，并保存新会话使用的模型。";
 	#browser: ModelBrowser;
 	#status: string | undefined;
 	#selecting = false;
@@ -32,7 +32,7 @@ class ModelSceneController implements SetupSceneController {
 	}
 
 	async onMount(): Promise<void> {
-		this.#status = theme.fg("muted", "Discovering available models…");
+		this.#status = theme.fg("muted", "正在发现可用模型…");
 		this.host.requestRender();
 		await this.#refreshModels();
 	}
@@ -57,7 +57,7 @@ class ModelSceneController implements SetupSceneController {
 
 	render(width: number, maxLines?: number): readonly string[] {
 		const lines = [
-			this.#status ?? theme.fg("muted", "Type to search. Enter saves the highlighted model as your default."),
+			this.#status ?? theme.fg("muted", "输入文字搜索，按回车将高亮模型保存为默认模型。"),
 			"",
 		];
 		const budget = maxLines === undefined ? MAX_VISIBLE_MODELS : maxLines - lines.length - BROWSER_FRAME_ROWS;

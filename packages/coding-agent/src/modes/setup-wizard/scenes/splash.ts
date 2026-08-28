@@ -21,7 +21,7 @@ const RESET = "\x1b[0m";
 const MIN_SCENE_WIDTH = 56;
 const MIN_SCENE_HEIGHT = 22;
 
-const SKIP_HINT = "press enter to skip";
+const SKIP_HINT = "按回车跳过";
 
 /** Density ramp for the rippling water, lightest → heaviest. */
 const WATER_RAMP = [

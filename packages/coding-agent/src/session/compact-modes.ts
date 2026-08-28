@@ -40,17 +40,17 @@ export interface CompactModeDef {
 export const COMPACT_MODES: readonly CompactModeDef[] = [
 	{
 		name: "soft",
-		description: "Summarize locally with the active model (skip server compaction)",
+		description: "用当前模型在本地总结（不走服务器压缩）",
 		overrides: { methodOrder: ["soft"] },
 	},
 	{
 		name: "remote",
-		description: "Summarize via OpenAI-compatible server compaction, then fall back to a local summary",
+		description: "用服务器压缩总结，失败时退回本地总结",
 		overrides: { methodOrder: ["remote", "soft"] },
 	},
 	{
 		name: "snapcompact",
-		description: "Archive history onto dense bitmap images the model reads back (no LLM call)",
+		description: "把历史存成图片由模型回读（不调用模型总结）",
 		overrides: { methodOrder: ["snapcompact"] },
 		rejectsFocus: true,
 	},

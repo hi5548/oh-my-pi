@@ -662,7 +662,7 @@ export class SettingsList implements Component {
 		if (this.#options.hint !== "") {
 			lines.push("");
 			const jumpHint = sections.length >= 2 ? "PgUp/PgDn to jump sections · " : "";
-			const hintText = this.#options.hint ?? `Enter/Space to change · ${jumpHint}Type to search · Esc to cancel`;
+			const hintText = this.#options.hint ?? `回车/空格修改 · ${jumpHint}输入文字搜索 · Esc 取消`;
 			lines.push(truncateToWidth(this.#theme.hint(`  ${hintText}`), width));
 		}
 

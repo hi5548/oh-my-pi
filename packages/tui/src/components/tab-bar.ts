@@ -219,7 +219,7 @@ export class TabBar implements Component {
 			// Navigation hint
 			if (this.showHint) {
 				chunks.push({ text: "  " });
-				chunks.push({ text: this.#theme.hint("(tab to cycle)") });
+				chunks.push({ text: this.#theme.hint("(按 Tab 切换)") });
 			}
 			return chunks;
 		};

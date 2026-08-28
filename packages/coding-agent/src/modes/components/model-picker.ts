@@ -67,12 +67,12 @@ const MIN_VISIBLE = 5;
 /** Fraction of the terminal height the floating overlay occupies. */
 const HEIGHT_FRACTION = 0.4;
 
-const STATUS_HINT = "Session-only switch — role models stay unchanged";
-const QUICK_ROLE_STATUS_HINT = "Quick role switch — applies its model and thinking for this session";
-const TASK_STATUS_HINT = "Task subagent switch — spawned task agents use this model (session-only)";
-const FOOTER_HINT = "↑/↓ models · Enter use for this session · type to search · @ quick roles · Esc close";
-const QUICK_ROLE_FOOTER_HINT = "↑/↓ roles · Enter apply role model · type to search · Esc close";
-const TASK_FOOTER_HINT = "↑/↓ models · Enter use for Task subagents · type to search · Esc close";
+const STATUS_HINT = "仅切换当前会话，角色模型保持不变";
+const QUICK_ROLE_STATUS_HINT = "快速角色切换，将本角色的模型和思考级别应用于当前会话";
+const TASK_STATUS_HINT = "任务子代理切换 — 新派生的任务代理使用此模型（仅本会话）";
+const FOOTER_HINT = "↑/↓ 模型 · 回车用于当前会话 · 输入文字搜索 · @ 快速角色 · Esc 关闭";
+const QUICK_ROLE_FOOTER_HINT = "↑/↓ 角色 · 回车应用角色模型 · 输入文字搜索 · Esc 关闭";
+const TASK_FOOTER_HINT = "↑/↓ 模型 · 回车用于任务子代理 · 输入文字搜索 · Esc 关闭";
 
 /**
  * The alt+p picker component. Hosted as a non-fullscreen bottom-anchored
@@ -124,7 +124,7 @@ export class ModelPickerComponent implements Component {
 		this.#browser = new ModelBrowser(settings, {
 			currentContextTokens: options.currentContextTokens,
 			markOverContext: true,
-			emptyText: () => (this.#roleMode ? "  No quick roles in the Ctrl+P cycle" : undefined),
+			emptyText: () => (this.#roleMode ? "  Ctrl+P 循环中没有快速角色" : undefined),
 		});
 		this.#browser.onActivate = item => {
 			const quickRole = this.#quickRoles.get(item.selector);
@@ -279,7 +279,7 @@ export class ModelPickerComponent implements Component {
 		}
 
 		const out: string[] = [];
-		out.push(topBorder(width, this.#taskMode ? "Switch Task Model" : "Switch Model", borderColor));
+		out.push(topBorder(width, this.#taskMode ? "切换任务模型" : "切换模型", borderColor));
 		out.push(row(status, width, borderColor));
 		for (const line of this.#browser.render(inner)) {
 			out.push(row(line, width, borderColor));

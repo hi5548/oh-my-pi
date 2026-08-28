@@ -43,24 +43,24 @@ export const BUILTIN_MARKETPLACE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec>
 	{
 		name: "marketplace",
 		icon: "cart",
-		description: "Manage marketplace plugin sources and installed plugins",
-		acpDescription: "Manage plugins from marketplaces",
+		description: "管理插件市场和已安装的插件",
+		acpDescription: "管理市场插件",
 		acpInputHint: "<subcommand>",
 		subcommands: [
-			{ name: "add", description: "Add a marketplace source", usage: "<source>" },
-			{ name: "remove", description: "Remove a marketplace source", usage: "<name>" },
-			{ name: "update", description: "Update marketplace catalog(s)", usage: "[name]" },
-			{ name: "list", description: "List configured marketplaces" },
-			{ name: "discover", description: "Browse available plugins", usage: "[marketplace]" },
+			{ name: "add", description: "添加一个插件市场", usage: "<source>" },
+			{ name: "remove", description: "删除一个插件市场", usage: "<name>" },
+			{ name: "update", description: "更新市场目录", usage: "[name]" },
+			{ name: "list", description: "列出已配置的市场" },
+			{ name: "discover", description: "浏览可安装的插件", usage: "[marketplace]" },
 			{
 				name: "install",
-				description: "Install a plugin (interactive browser if no args)",
+				description: "安装插件（不带参数时打开选择器）",
 				usage: "[--force] [name@marketplace]",
 			},
-			{ name: "uninstall", description: "Uninstall a plugin (selector if no args)", usage: "[name@marketplace]" },
-			{ name: "installed", description: "List installed marketplace plugins" },
-			{ name: "upgrade", description: "Upgrade outdated plugins", usage: "[name@marketplace]" },
-			{ name: "help", description: "Show usage guide" },
+			{ name: "uninstall", description: "卸载插件（不带参数时打开选择器）", usage: "[name@marketplace]" },
+			{ name: "installed", description: "列出已安装的市场插件" },
+			{ name: "upgrade", description: "升级过期的插件", usage: "[name@marketplace]" },
+			{ name: "help", description: "查看使用说明" },
 		],
 		allowArgs: true,
 		handle: async (command, runtime) => {
@@ -115,14 +115,14 @@ export const BUILTIN_MARKETPLACE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec>
 				const manager = await createMarketplaceManager(runtime);
 				switch (verb) {
 					case "add": {
-						if (!rest) return usage("Usage: /marketplace add <source>", runtime);
+						if (!rest) return usage("用法：/marketplace add <source>", runtime);
 						const entry = await manager.addMarketplace(rest);
 						await runtime.output(`Added marketplace: ${entry.name}`);
 						return commandConsumed();
 					}
 					case "remove":
 					case "rm": {
-						if (!rest) return usage("Usage: /marketplace remove <name>", runtime);
+						if (!rest) return usage("用法：/marketplace remove <name>", runtime);
 						await manager.removeMarketplace(rest);
 						await runtime.output(`Removed marketplace: ${rest}`);
 						return commandConsumed();
@@ -180,7 +180,7 @@ export const BUILTIN_MARKETPLACE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec>
 					case "uninstall": {
 						const parsed = parsePluginScopeArgs(
 							rest,
-							"Usage: /marketplace uninstall [--scope user|project] <name@marketplace>",
+							"用法：/marketplace uninstall [--scope user|project] <name@marketplace>",
 						);
 						if ("error" in parsed) return usage(parsed.error, runtime);
 						await manager.uninstallPlugin(parsed.pluginId, parsed.scope);
@@ -204,7 +204,7 @@ export const BUILTIN_MARKETPLACE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec>
 						if (rest) {
 							const parsed = parsePluginScopeArgs(
 								rest,
-								"Usage: /marketplace upgrade [--scope user|project] <name@marketplace>",
+								"用法：/marketplace upgrade [--scope user|project] <name@marketplace>",
 							);
 							if ("error" in parsed) return usage(parsed.error, runtime);
 							const result = await manager.upgradePlugin(parsed.pluginId, parsed.scope);
@@ -263,7 +263,7 @@ export const BUILTIN_MARKETPLACE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec>
 				switch (sub) {
 					case "add": {
 						if (!rest) {
-							runtime.ctx.showStatus("Usage: /marketplace add <source>");
+							runtime.ctx.showStatus("用法：/marketplace add <source>");
 							return;
 						}
 						const entry = await mgr.addMarketplace(rest);
@@ -273,7 +273,7 @@ export const BUILTIN_MARKETPLACE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec>
 					case "remove":
 					case "rm": {
 						if (!rest) {
-							runtime.ctx.showStatus("Usage: /marketplace remove <name>");
+							runtime.ctx.showStatus("用法：/marketplace remove <name>");
 							return;
 						}
 						await mgr.removeMarketplace(rest);
@@ -332,7 +332,7 @@ export const BUILTIN_MARKETPLACE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec>
 						}
 						const uninstArgs = parsePluginScopeArgs(
 							rest,
-							"Usage: /marketplace uninstall [--scope user|project] <name@marketplace>",
+							"用法：/marketplace uninstall [--scope user|project] <name@marketplace>",
 						);
 						if ("error" in uninstArgs) {
 							runtime.ctx.showStatus(uninstArgs.error);
@@ -358,7 +358,7 @@ export const BUILTIN_MARKETPLACE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec>
 						if (rest) {
 							const upArgs = parsePluginScopeArgs(
 								rest,
-								"Usage: /marketplace upgrade [--scope user|project] <name@marketplace>",
+								"用法：/marketplace upgrade [--scope user|project] <name@marketplace>",
 							);
 							if ("error" in upArgs) {
 								runtime.ctx.showStatus(upArgs.error);
@@ -424,13 +424,13 @@ export const BUILTIN_MARKETPLACE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec>
 		name: "plugins",
 		aliases: ["plugin"],
 		icon: "package",
-		description: "View and manage installed plugins",
-		acpDescription: "Manage plugins",
+		description: "查看和管理已安装的插件",
+		acpDescription: "管理插件",
 		acpInputHint: "[list|enable|disable]",
 		subcommands: [
-			{ name: "list", description: "List all installed plugins (npm + marketplace)" },
-			{ name: "enable", description: "Enable a marketplace plugin", usage: "<name@marketplace>" },
-			{ name: "disable", description: "Disable a marketplace plugin", usage: "<name@marketplace>" },
+			{ name: "list", description: "列出全部已安装插件（npm 和市场）" },
+			{ name: "enable", description: "启用一个市场插件", usage: "<name@marketplace>" },
+			{ name: "disable", description: "停用一个市场插件", usage: "<name@marketplace>" },
 		],
 		allowArgs: true,
 		handle: async (command, runtime) => {
@@ -439,7 +439,7 @@ export const BUILTIN_MARKETPLACE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec>
 				if (verb === "enable" || verb === "disable") {
 					const parsed = parsePluginScopeArgs(
 						rest,
-						`Usage: /plugins ${verb} [--scope user|project] <name@marketplace>`,
+						`用法：/plugins ${verb} [--scope user|project] <name@marketplace>`,
 					);
 					if ("error" in parsed) return usage(parsed.error, runtime);
 					const manager = await createMarketplaceManager(runtime);
@@ -503,7 +503,7 @@ export const BUILTIN_MARKETPLACE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec>
 					case "disable": {
 						const parsed = parsePluginScopeArgs(
 							rest ?? "",
-							`Usage: /plugins ${sub} [--scope user|project] <name@marketplace>`,
+							`用法：/plugins ${sub} [--scope user|project] <name@marketplace>`,
 						);
 						if ("error" in parsed) {
 							runtime.ctx.showStatus(parsed.error);
@@ -555,8 +555,8 @@ export const BUILTIN_MARKETPLACE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec>
 	{
 		name: "reload-plugins",
 		icon: "restart",
-		description: "Reload all plugins (skills, commands, hooks, tools, agents, MCP)",
-		acpDescription: "Reload all plugins",
+		description: "重载全部插件（技能、命令、钩子、工具、代理、MCP）",
+		acpDescription: "重载全部插件",
 		handle: async (_command, runtime) => {
 			await runtime.reloadPlugins();
 			await runtime.output("Plugins reloaded.");

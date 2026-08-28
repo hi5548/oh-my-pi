@@ -24,8 +24,8 @@ const GLYPH_ITEMS: readonly SelectItem[] = GLYPH_PRESETS.map((preset, index) => 
 }));
 
 class GlyphSceneController implements SetupSceneController {
-	title = "Choose glyph mode";
-	subtitle = "Pick the row that renders cleanly in your terminal.";
+	title = "选择符号模式";
+	subtitle = "选择在你的终端中显示正常的一项。";
 	#selectList: SelectList;
 	#previewRequest = 0;
 	#committing = false;
@@ -69,7 +69,7 @@ class GlyphSceneController implements SetupSceneController {
 	}
 
 	render(width: number): readonly string[] {
-		const lines = [theme.fg("muted", "If a row shows boxes, tofu, or misaligned icons, pick another."), ""];
+		const lines = [theme.fg("muted", "如果某一行显示方框、豆腐块或图标错位，请选择其他项。"), ""];
 		this.#listRowStart = lines.length;
 		lines.push(...this.#selectList.render(width));
 		return lines;

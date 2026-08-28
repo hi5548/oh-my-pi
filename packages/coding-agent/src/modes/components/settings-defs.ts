@@ -11,6 +11,7 @@
 
 import { TERMINAL } from "@oh-my-pi/pi-tui";
 import { Settings } from "../../config/settings";
+import { translateOption, translateUiText } from "../localization";
 import {
 	type AnyUiMetadata,
 	getDefault,
@@ -177,7 +178,7 @@ const CONDITIONS: Record<string, () => boolean> = {
 function resolveOptions(ui: AnyUiMetadata): OptionList | "runtime" | undefined {
 	if (!ui.options) return undefined;
 	if (ui.options === "runtime") return "runtime";
-	return ui.options;
+	return ui.options.map(translateOption);
 }
 
 function pathToSettingDef(path: SettingPath): SettingDef | null {
@@ -188,11 +189,11 @@ function pathToSettingDef(path: SettingPath): SettingDef | null {
 	const condition = ui.condition ? CONDITIONS[ui.condition] : undefined;
 	const base = {
 		path,
-		label: ui.label,
-		description: ui.description,
-		warning: ui.warning,
+		label: translateUiText(ui.label),
+		description: translateUiText(ui.description),
+		warning: ui.warning === undefined ? undefined : translateUiText(ui.warning),
 		tab: ui.tab,
-		group: ui.group,
+		group: ui.group === undefined ? undefined : translateUiText(ui.group),
 		condition,
 	};
 
@@ -279,7 +280,7 @@ export function getSettingsForTab(tab: SettingTab): SettingDef[] {
 	const order = TAB_GROUPS[tab];
 	const rank = (def: SettingDef): number => {
 		if (!def.group) return -1;
-		const index = order.indexOf(def.group);
+		const index = order.findIndex(group => translateUiText(group) === def.group);
 		return index >= 0 ? index : order.length;
 	};
 	return defs.sort((a, b) => rank(a) - rank(b));

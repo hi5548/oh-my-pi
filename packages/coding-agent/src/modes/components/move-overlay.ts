@@ -233,12 +233,12 @@ export class MoveOverlay implements Component, Focusable {
 		const w = width;
 		const lines: string[] = [];
 
-		lines.push(topBorder(w, "Move to directory"));
+		lines.push(topBorder(w, "移动到目录"));
 		lines.push(row(this.#renderInput(), w));
 		lines.push(row("", w));
 
 		if (this.#results.length === 0 && this.#input.length > 0) {
-			lines.push(row(theme.fg("dim", "No matching directories"), w));
+			lines.push(row(theme.fg("dim", "没有匹配的目录"), w));
 		} else {
 			for (let i = 0; i < Math.min(this.#results.length, MAX_RESULTS); i++) {
 				const item = this.#results[i]!;
@@ -250,7 +250,7 @@ export class MoveOverlay implements Component, Focusable {
 		}
 
 		lines.push(row("", w));
-		lines.push(row(theme.fg("dim", "Type to filter · ↑↓ navigate · Tab accept · Enter confirm · Esc cancel"), w));
+		lines.push(row(theme.fg("dim", "输入文字筛选 · ↑↓ 导航 · Tab 接受 · 回车确认 · Esc 取消"), w));
 		lines.push(bottomBorder(w));
 		return lines;
 	}
@@ -258,9 +258,9 @@ export class MoveOverlay implements Component, Focusable {
 	invalidate(): void {}
 
 	#renderInput(): string {
-		const prompt = theme.fg("dim", "Path: ");
+		const prompt = theme.fg("dim", "路径：");
 		if (this.#input.length === 0) {
-			const placeholder = theme.fg("dim", "Type a directory path…");
+			const placeholder = theme.fg("dim", "输入目录路径…");
 			const marker = this.#focused ? CURSOR_MARKER : "";
 			return `${prompt}${placeholder}${marker}\x1b[7m \x1b[27m`;
 		}

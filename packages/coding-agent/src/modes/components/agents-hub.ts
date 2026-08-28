@@ -49,6 +49,7 @@ import { resolveAgentPrewalkDefault } from "../../task/prewalk";
 import type { AgentDefinition, AgentSource } from "../../task/types";
 import { shortenPath } from "../../tools/render-utils";
 import { getEditorTheme, theme } from "../theme/theme";
+import { translateUiText } from "../localization";
 import {
 	matchesAppFollowUp,
 	matchesSelectCancel,
@@ -70,9 +71,9 @@ interface HubAgent extends AgentDefinition {
 }
 
 const SOURCE_LABEL: Record<AgentSource, string> = {
-	project: "Project",
-	user: "User",
-	bundled: "Bundled",
+	project: "项目",
+	user: "用户",
+	bundled: "内置",
 };
 const SOURCE_ORDER: Record<AgentSource, number> = { project: 0, user: 1, bundled: 2 };
 
@@ -266,7 +267,7 @@ export class AgentsHubComponent implements Component {
 		this.#modelContext = modelContext;
 		this.#callbacks = callbacks;
 		this.#browser = new ModelBrowser(settings, {
-			emptyText: () => "  No models available — configure a provider in /models first.",
+			emptyText: () => "  没有可用模型，请先在 /models 中配置服务商。",
 		});
 		this.#browser.setShowProvider(true);
 		this.#browser.onActivate = item => this.#commitPickedModel(item);
@@ -351,7 +352,7 @@ export class AgentsHubComponent implements Component {
 		const counts: Record<AgentSource, number> = { project: 0, user: 0, bundled: 0 };
 		for (const agent of this.#allAgents) counts[agent.source]++;
 		const entries: SidebarEntry[] = [
-			{ id: "all", kind: "all", label: "All agents", annotation: String(this.#allAgents.length) },
+			{ id: "all", kind: "all", label: "全部代理", annotation: String(this.#allAgents.length) },
 		];
 		const sources = (["project", "user", "bundled"] as const).filter(source => counts[source] > 0);
 		if (sources.length > 0) {
@@ -367,7 +368,7 @@ export class AgentsHubComponent implements Component {
 			}
 		}
 		entries.push({ id: "sep:actions", kind: "separator", label: "" });
-		entries.push({ id: "new", kind: "new", label: "New agent" });
+		entries.push({ id: "new", kind: "new", label: "新建代理" });
 		this.#entries = entries;
 		if (!entries.some(entry => entry.id === this.#activeEntryId)) this.#activeEntryId = "all";
 	}
@@ -1206,25 +1207,25 @@ export class AgentsHubComponent implements Component {
 		if (this.#loadError) return truncateToWidth(theme.fg("error", ` ${this.#loadError}`), width);
 		if (this.#assigning) {
 			const { agent, property } = this.#assigning;
-			const what = property === "model" ? "model override" : `${property} model`;
+			const what = property === "model" ? "模型覆盖" : `${translateUiText(property)} 模型`;
 			return truncateToWidth(
-				theme.fg("accent", ` Picking ${what} for ${theme.bold(agent.name)} — Enter assigns, Esc cancels`),
+				theme.fg("accent", ` 正在为 ${theme.bold(agent.name)} 选择${what} — 回车确认，Esc 取消`),
 				width,
 			);
 		}
 		if (this.#createActive) {
-			return truncateToWidth(theme.fg("accent", " New agent — describe it and let the architect draft it"), width);
+			return truncateToWidth(theme.fg("accent", " 新建代理 — 描述需求后由架构师起草"), width);
 		}
 		if (this.#notice) return truncateToWidth(theme.fg("success", ` ${this.#notice}`), width);
 		const entry = this.#activeEntry();
-		const scopeLabel = entry.kind === "source" ? `${entry.label} agents` : "All agents";
+		const scopeLabel = entry.kind === "source" ? `${entry.label} 代理` : "全部代理";
 		const count = this.#rows.filter(rowDef => rowDef.kind === "agent").length;
 		return truncateToWidth(theme.fg("muted", ` ${scopeLabel} · ${count}`), width);
 	}
 
 	#renderList(width: number, rows: number): string[] {
 		const lines: string[] = [];
-		const searchText = this.#searchQuery ? theme.fg("accent", this.#searchQuery) : theme.fg("dim", "type to filter");
+		const searchText = this.#searchQuery ? theme.fg("accent", this.#searchQuery) : theme.fg("dim", "输入文字筛选");
 		lines.push(truncateToWidth(` ${theme.fg("muted", "search:")} ${searchText}`, width));
 		lines.push("");
 		this.#listRowStart = lines.length;
@@ -1248,7 +1249,7 @@ export class AgentsHubComponent implements Component {
 			const hovered = i === this.#rowHover;
 			const cursor = selected && listFocused ? theme.fg("accent", theme.nav.cursor) : " ";
 			if (rowDef.kind === "new") {
-				let line = ` ${cursor} ${theme.fg(selected ? "accent" : "dim", "+ New agent…")}`;
+				let line = ` ${cursor} ${theme.fg(selected ? "accent" : "dim", "+ 新建代理…")}`;
 				if (hovered) line = theme.bg("selectedBg", line);
 				lines.push(truncateToWidth(line, width));
 				continue;
@@ -1383,23 +1384,23 @@ export class AgentsHubComponent implements Component {
 		if (this.#strip) {
 			if (this.#strip.kind === "pattern") {
 				const property = this.#strip.property;
-				const values = property === "model" ? "a model pattern" : '"on", "off", or a model pattern';
-				return `Enter ${values} (role aliases like @smol and :level suffixes work; empty clears) · Esc back`;
+				const values = property === "model" ? "模型匹配模式" : '“on”、“off”或模型匹配模式';
+				return `输入${values}（支持 @smol 等角色别名和 :level 后缀；留空可清除）· Esc 返回`;
 			}
-			return this.#strip.property ? "←/→ choose · Enter apply · Esc back" : "←/→ choose · Enter open · Esc cancel";
+			return this.#strip.property ? "←/→ 选择 · 回车应用 · Esc 返回" : "←/→ 选择 · 回车打开 · Esc 取消";
 		}
 		if (this.#assigning) {
-			return "Enter pick · ↑/↓ models · type to search · Esc cancel";
+			return "回车选择 · ↑/↓ 模型 · 输入文字搜索 · Esc 取消";
 		}
 		if (this.#createActive) {
-			if (this.#createSpec) return "Enter save · Tab scope · r regenerate · Esc cancel";
-			if (this.#createGenerating) return "Generating…";
-			return "Ctrl+Q/Ctrl+Enter generate · Enter newline · Tab scope · Esc cancel";
+			if (this.#createSpec) return "回车保存 · Tab 范围 · r 重新生成 · Esc 取消";
+			if (this.#createGenerating) return "正在生成…";
+			return "Ctrl+Q/Ctrl+Enter 生成 · 回车换行 · Tab 范围 · Esc 取消";
 		}
 		if (this.#focus === "scope") {
-			return "↑/↓ scopes · →/Enter agents · Esc close";
+			return "↑/↓ 范围 · →/回车 代理 · Esc 关闭";
 		}
-		return "Enter configure · Space enable/disable · ↑/↓ rows · type to search · Ctrl+R reload · Esc close";
+		return "回车配置 · 空格启用/停用 · ↑/↓ 行 · 输入文字搜索 · Ctrl+R 重载 · Esc 关闭";
 	}
 
 	#renderFooter(width: number): string {

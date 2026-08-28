@@ -89,8 +89,8 @@ function renderThemePreview(width: number): string[] {
 }
 
 class ThemeSceneController implements SetupSceneController {
-	title = "Pick a theme";
-	subtitle = "Move through the list to preview; Enter saves the highlighted choice.";
+	title = "选择主题";
+	subtitle = "移动选择以预览，按回车保存高亮选项。";
 	#mode: ThemeMode = "curated";
 	#selectList: SelectList;
 	#loadingAllThemes = false;
@@ -139,10 +139,10 @@ class ThemeSceneController implements SetupSceneController {
 	render(width: number, maxLines?: number): readonly string[] {
 		const budget = maxLines ?? Number.POSITIVE_INFINITY;
 		const lines = [
-			theme.fg("muted", "Theme changes preview live. Nothing is saved until you press Enter."),
+			theme.fg("muted", "主题会实时预览，按回车前不会保存。"),
 			this.#mode === "all"
-				? theme.fg("dim", "Browsing all themes · Esc returns to curated choices")
-				: theme.fg("dim", "Esc skips this step"),
+				? theme.fg("dim", "正在浏览全部主题 · Esc 返回精选主题")
+				: theme.fg("dim", "Esc 跳过此步骤"),
 			"",
 		];
 		// The mock status-line/editor block is decorative — the wizard itself
@@ -155,7 +155,7 @@ class ThemeSceneController implements SetupSceneController {
 		}
 		if (this.#loadingAllThemes) {
 			this.#listRowStart = -1;
-			lines.push(theme.fg("dim", "Loading themes…"));
+			lines.push(theme.fg("dim", "正在加载主题…"));
 		} else {
 			this.#listRowStart = lines.length;
 			if (maxLines !== undefined) {

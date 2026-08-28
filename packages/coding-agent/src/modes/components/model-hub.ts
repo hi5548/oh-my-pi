@@ -41,6 +41,7 @@ import type { Settings } from "../../config/settings";
 import { AUTO_THINKING, type ConfiguredThinkingLevel, getConfiguredThinkingLevelMetadata } from "../../thinking";
 import { thinkingLevelGlyph } from "../../tools/render-utils";
 import { theme } from "../theme/theme";
+import { translateUiText } from "../localization";
 import { matchesSelectCancel, matchesSelectDown, matchesSelectUp } from "../utils/keybinding-matchers";
 import {
 	buildBrowserItems,
@@ -457,10 +458,10 @@ export class ModelHubComponent implements Component {
 			{
 				id: "roles",
 				kind: "roles",
-				label: "Roles",
+				label: "角色",
 				annotation: `${assignedCount}/${visibleRoles.length}`,
 			},
-			{ id: "all", kind: "all", label: "All models", annotation: String(availableModels.length) },
+			{ id: "all", kind: "all", label: "全部模型", annotation: String(availableModels.length) },
 		];
 
 		this.#fixedEntries = fixed;
@@ -787,17 +788,17 @@ export class ModelHubComponent implements Component {
 	#formatDiscoveryAge(fetchedAt: number | undefined): string | undefined {
 		if (!fetchedAt) return undefined;
 		const ageMs = Math.max(0, Date.now() - fetchedAt);
-		if (ageMs < 60_000) return "less than a minute ago";
-		return `${Math.round(ageMs / 60_000)}m ago`;
+		if (ageMs < 60_000) return "不到一分钟前";
+		return `${Math.round(ageMs / 60_000)} 分钟前`;
 	}
 
 	#emptyStateMessage(): string | undefined {
 		if (this.#configError) return `  ${this.#configError}`;
 		const entry = this.#activeEntry();
-		if (entry.kind === "recent") return "  No recently used models yet";
+		if (entry.kind === "recent") return "  还没有最近使用的模型";
 		if (entry.kind !== "provider" || entry.locked) return undefined;
 		if (this.#browser.query.trim()) {
-			return `  No matching models in ${entry.label}. Switch to All models to search every provider.`;
+			return `  在 ${entry.label} 中没有匹配的模型。切换到“全部模型”可搜索所有服务商。`;
 		}
 		const providerId = entry.providerId ?? "";
 		const state = this.#registry.getProviderDiscoveryState(providerId);
@@ -806,22 +807,22 @@ export class ModelHubComponent implements Component {
 		switch (state.status) {
 			case "cached":
 				return age
-					? `  Using cached model list from ${age}. Live refresh is still pending.`
-					: "  Using cached model list. Live refresh is still pending.";
+					? `  正在使用 ${age} 的缓存模型列表，实时刷新仍在等待中。`
+					: "  正在使用缓存模型列表，实时刷新仍在等待中。";
 			case "unavailable": {
 				const httpMatch = state.error?.match(/^HTTP (\d+) from (.+)$/);
 				if (httpMatch?.[1] === "404") {
-					return `  Discovery endpoint ${httpMatch[2]} returned 404. Point baseUrl at the host that serves /models (usually .../v1).`;
+					return `  模型发现地址 ${httpMatch[2]} 返回了 404。请将 baseUrl 指向提供 /models 的主机（通常是 .../v1）。`;
 				}
-				if (state.error) return `  Discovery failed: ${state.error}`;
-				return age ? `  Provider unavailable. Using cached model list from ${age}.` : "  Provider unavailable.";
+				if (state.error) return `  模型发现失败：${state.error}`;
+				return age ? `  服务商不可用，正在使用 ${age} 的缓存模型列表。` : "  服务商不可用。";
 			}
 			case "unauthenticated":
-				return "  Provider requires authentication before models can be discovered.";
+				return "  服务商需要身份验证后才能发现模型。";
 			case "idle":
-				return "  Provider has not been refreshed yet.";
+				return "  服务商尚未刷新。";
 			case "empty":
-				return "  Discovery succeeded but returned 0 models. Check that /models returns { data: [{ id }] }.";
+				return "  模型发现成功，但返回了 0 个模型。请确认 /models 返回 { data: [{ id }] }。";
 			case "ok":
 				return undefined;
 		}
@@ -1941,21 +1942,21 @@ export class ModelHubComponent implements Component {
 		if (this.#assigning !== null) {
 			if (this.#assigning.kind === "fallbackKey") {
 				return truncateToWidth(
-					theme.fg("accent", " New fallback chain — Enter picks the model it protects, Esc cancels"),
+					theme.fg("accent", " 新建备用链 — 回车选择受保护的模型，Esc 取消"),
 					width,
 				);
 			}
 			const info = getRoleInfo(this.#assigning.role, this.#settings);
-			const label = info.tag ?? info.name ?? this.#assigning.role;
+			const label = translateUiText(info.tag ?? info.name ?? this.#assigning.role);
 			if (this.#assigning.kind === "fallback") {
-				const verb = this.#assigning.index === null ? "Adding fallback for" : "Replacing fallback of";
+				const verb = this.#assigning.index === null ? "为其添加备用模型" : "替换其备用模型";
 				return truncateToWidth(
-					theme.fg("accent", ` ${verb} ${theme.bold(label)} — Enter picks the fallback model, Esc cancels`),
+					theme.fg("accent", ` ${verb} ${theme.bold(label)} — 回车选择备用模型，Esc 取消`),
 					width,
 				);
 			}
 			return truncateToWidth(
-				theme.fg("accent", ` Assigning ${theme.bold(label)} — Enter assigns, Esc cancels`),
+				theme.fg("accent", ` 正在为 ${theme.bold(label)} 分配 — 回车确认，Esc 取消`),
 				width,
 			);
 		}
@@ -1964,22 +1965,22 @@ export class ModelHubComponent implements Component {
 		let text: string;
 		switch (entry.kind) {
 			case "recent":
-				text = `Recently used models${scopedSuffix}`;
+				text = `最近使用的模型${scopedSuffix}`;
 				break;
 			case "roles":
-				text = "Model roles — f adds a retry fallback, cleared roles fall back to auto-selection";
+				text = "模型角色 — 按 f 添加重试备用模型，清除角色后自动选择";
 				break;
 			case "provider":
 				if (entry.locked) {
-					text = `${entry.label} · not configured`;
+					text = `${entry.label} · 未配置`;
 				} else if (entry.providerId && this.#refreshingProviders.has(entry.providerId)) {
-					text = `${entry.label} · refreshing model list…`;
+					text = `${entry.label} · 正在刷新模型列表…`;
 				} else {
-					text = `${entry.label} · ${entry.annotation ?? "0"} models${scopedSuffix}`;
+					text = `${entry.label} · ${entry.annotation ?? "0"} 个模型${scopedSuffix}`;
 				}
 				break;
 			default:
-				text = `All available models${scopedSuffix}`;
+				text = `全部可用模型${scopedSuffix}`;
 				break;
 		}
 		if (this.#configError && entry.kind !== "provider") {
@@ -2040,7 +2041,7 @@ export class ModelHubComponent implements Component {
 			}
 
 			if (rowDef.kind === "newRole" || rowDef.kind === "newFallback") {
-				const label = rowDef.kind === "newRole" ? "+ New role…" : "+ New fallback…";
+				const label = rowDef.kind === "newRole" ? "+ 新建角色…" : "+ 新建备用…";
 				let line = ` ${cursor} ${theme.fg(selected ? "accent" : "dim", label)}`;
 				line = this.#finishRolesRow(line, width, hovered);
 				lines.push(line);
@@ -2070,7 +2071,7 @@ export class ModelHubComponent implements Component {
 			const role = rowDef.role;
 			const info = getRoleInfo(role, this.#settings);
 			const assignment = this.#roles[role];
-			const tag = (info.tag ?? info.name ?? role).padEnd(tagWidth);
+			const tag = translateUiText(info.tag ?? info.name ?? role).padEnd(tagWidth);
 
 			let dot: string;
 			let tagStyled: string;
@@ -2081,14 +2082,14 @@ export class ModelHubComponent implements Component {
 				tagStyled = theme.fg(info.color ?? "muted", tag);
 				value = `${theme.fg("dim", `${assignment.model.provider}/`)}${selected ? theme.fg("accent", assignment.model.id) : assignment.model.id}`;
 				const glyph = thinkingLevelGlyph(assignment.thinkingLevel, theme);
-				const label = getConfiguredThinkingLevelMetadata(assignment.thinkingLevel).label;
+				const label = translateUiText(getConfiguredThinkingLevelMetadata(assignment.thinkingLevel).label);
 				if (assignment.thinkingLevel !== ThinkingLevel.Inherit) {
 					levelStyled = theme.fg("dim", glyph ? `${glyph} ${label}` : label);
 				}
 			} else if (assignment) {
 				dot = theme.fg("dim", theme.status.shadowed);
 				tagStyled = theme.fg("dim", tag);
-				value = theme.fg("dim", `auto → ${assignment.model.provider}/${assignment.model.id}`);
+				value = theme.fg("dim", `自动 → ${assignment.model.provider}/${assignment.model.id}`);
 			} else {
 				dot = theme.fg("dim", theme.status.shadowed);
 				tagStyled = theme.fg("dim", tag);
@@ -2114,8 +2115,8 @@ export class ModelHubComponent implements Component {
 			const hiddenAbove = this.#roleScrollStart;
 			const hiddenBelow = total - endIndex;
 			const parts: string[] = [];
-			if (hiddenAbove > 0) parts.push(`↑ ${hiddenAbove} more`);
-			if (hiddenBelow > 0) parts.push(`↓ ${hiddenBelow} more`);
+			if (hiddenAbove > 0) parts.push(`↑ 还有 ${hiddenAbove} 项`);
+			if (hiddenBelow > 0) parts.push(`↓ 还有 ${hiddenBelow} 项`);
 			lines.push(truncateToWidth(theme.fg("dim", `   ${parts.join("   ")}`), width));
 		}
 
@@ -2133,10 +2134,10 @@ export class ModelHubComponent implements Component {
 					cycleOrder.map(role => ({ label: role })),
 					activeIndex,
 				);
-				lines[rows - 1] = truncateToWidth(`  ${theme.fg("dim", `${cycleKey} cycle:`)} ${track}`, width);
+				lines[rows - 1] = truncateToWidth(`  ${theme.fg("dim", `${cycleKey} 循环：`)} ${track}`, width);
 			} else {
 				lines[rows - 1] = truncateToWidth(
-					theme.fg("dim", `  ${cycleKey} cycle is empty — press c on a role to add it`),
+					theme.fg("dim", `  ${cycleKey} 循环为空 — 在角色上按 c 添加`),
 					width,
 				);
 			}
@@ -2148,27 +2149,27 @@ export class ModelHubComponent implements Component {
 		const lines: string[] = [];
 		this.#lockedLoginLine = null;
 		lines.push("");
-		lines.push(truncateToWidth(theme.fg("warning", `  ${entry.label} has no credentials configured`), width));
+		lines.push(truncateToWidth(theme.fg("warning", `  ${entry.label} 尚未配置凭据`), width));
 		lines.push("");
 		const envVars = entry.providerId ? (providerEntry(entry.providerId)?.envVars ?? []) : [];
 		if (envVars.length > 0) {
 			lines.push(
 				truncateToWidth(
-					theme.fg("muted", `  Set ${envVars.join(" or ")} in your environment, or add a key in config.`),
+					theme.fg("muted", `  请在环境变量中设置 ${envVars.join(" 或 ")}，或在配置中添加密钥。`),
 					width,
 				),
 			);
 		} else {
-			lines.push(truncateToWidth(theme.fg("muted", "  Add an API key for this provider in config."), width));
+			lines.push(truncateToWidth(theme.fg("muted", "  请在配置中为此服务商添加 API key。"), width));
 		}
 		if (entry.oauth) {
 			this.#lockedLoginLine = lines.length + 1; // +1 for the status row offset handled by caller
-			lines.push(truncateToWidth(theme.fg("accent", `  ${theme.nav.cursor} Log in with OAuth (Enter)`), width));
+			lines.push(truncateToWidth(theme.fg("accent", `  ${theme.nav.cursor} 使用 OAuth 登录（回车）`), width));
 		}
 		lines.push("");
 		const catalogCount = entry.catalogCount ?? 0;
 		if (catalogCount > 0) {
-			lines.push(truncateToWidth(theme.fg("dim", `  ${catalogCount} models in catalog:`), width));
+			lines.push(truncateToWidth(theme.fg("dim", `  目录中有 ${catalogCount} 个模型：`), width));
 			const preview = this.#scopedModels.length > 0 ? [] : this.#registry.getAll();
 			for (const model of preview) {
 				if (model.provider !== entry.providerId) continue;
@@ -2184,26 +2185,26 @@ export class ModelHubComponent implements Component {
 		const strip = this.#strip;
 		if (strip) {
 			if (strip.kind === "roleName") {
-				return "Enter create + pick model · Esc cancel";
+				return "回车创建并选择模型 · Esc 取消";
 			}
-			if (strip.kind === "role") return "←/→ choose · Enter assign/clear · Esc cancel";
-			if (strip.kind === "scope") return "←/→ save scope · Enter choose · Esc cancel";
-			return "←/→ thinking level · Enter apply · Esc keep";
+			if (strip.kind === "role") return "←/→ 选择 · 回车分配/清除 · Esc 取消";
+			if (strip.kind === "scope") return "←/→ 保存范围 · 回车选择 · Esc 取消";
+			return "←/→ 思考等级 · 回车应用 · Esc 保留";
 		}
 		if (this.#assigning !== null) {
 			switch (this.#assigning.kind) {
 				case "fallback":
-					return "Enter pick fallback · ↑/↓ providers · type to search · Esc cancel";
+					return "回车选择备用 · ↑/↓ 服务商 · 输入文字搜索 · Esc 取消";
 				case "fallbackKey":
-					return "Enter pick the protected model · ↑/↓ providers · type to search · Esc cancel";
+					return "回车选择受保护模型 · ↑/↓ 服务商 · 输入文字搜索 · Esc 取消";
 				default:
-					return "Enter assign · ↑/↓ providers · type to search · Esc cancel";
+					return "回车分配 · ↑/↓ 服务商 · 输入文字搜索 · Esc 取消";
 			}
 		}
 		const entry = this.#activeEntry();
 		if (entry.kind === "roles") {
 			if (this.#focus !== "list") {
-				return "↑/↓ providers · → roles · Esc close";
+				return "↑/↓ 服务商 · → 角色 · Esc 关闭";
 			}
 			const row = this.#rolesRows[this.#roleIndex];
 			if (row?.kind === "fallback") {
@@ -2211,23 +2212,23 @@ export class ModelHubComponent implements Component {
 				// inherit and unknown models have no ladder to offer, so the
 				// action would be inert there.
 				const editable = this.#resolveFallbackEntry(row.role, row.chainIndex) !== undefined;
-				const thinking = editable ? " · t thinking" : "";
-				return `↑/↓ rows · Enter replace · f add another · x remove${thinking} · [/] reorder · ← providers`;
+				const thinking = editable ? " · t 思考" : "";
+				return `↑/↓ 行 · 回车替换 · f 添加备用 · x 移除${thinking} · [/] 调整顺序 · ← 服务商`;
 			}
 			if (row?.kind === "chainKey") {
-				return "↑/↓ rows · Enter/f add fallback · x clear chain · ← providers";
+				return "↑/↓ 行 · 回车/f 添加备用 · x 清除链 · ← 服务商";
 			}
 			if (row?.kind === "newFallback") {
-				return "↑/↓ rows · Enter new model/provider fallback chain · ← providers";
+				return "↑/↓ 行 · 回车新建模型/服务商备用链 · ← 服务商";
 			}
-			return "↑/↓ rows · Enter pick · f fallback · x clear · t thinking · c cycle · [/] reorder · n new";
+			return "↑/↓ 行 · 回车选择 · f 备用 · x 清除 · t 思考 · c 循环 · [/] 调序 · n 新建";
 		}
 		if (entry.kind === "provider" && entry.locked) {
-			return entry.oauth ? "Enter log in · ↑/↓ providers · Esc close" : "↑/↓ providers · Esc close";
+			return entry.oauth ? "回车登录 · ↑/↓ 服务商 · Esc 关闭" : "↑/↓ 服务商 · Esc 关闭";
 		}
-		const arrows = this.#focus === "scope" ? "↑/↓ providers · → models" : "↑/↓ models · ← providers";
-		const refresh = entry.kind === "provider" ? " · F5 refresh" : "";
-		return `Enter assign roles · ${arrows} · type to search${refresh} · Esc close`;
+		const arrows = this.#focus === "scope" ? "↑/↓ 服务商 · → 模型" : "↑/↓ 模型 · ← 服务商";
+		const refresh = entry.kind === "provider" ? " · F5 刷新" : "";
+		return `回车分配角色 · ${arrows} · 输入文字搜索${refresh} · Esc 关闭`;
 	}
 
 	/** Footer row: active strip (chips) or the contextual hint line. */
@@ -2239,10 +2240,10 @@ export class ModelHubComponent implements Component {
 		}
 
 		if (strip.kind === "roleName") {
-			const label = theme.fg("accent", "New role name:");
-			const inputWidth = Math.max(8, Math.min(32, width - visibleWidth("New role name:") - 24));
+			const label = theme.fg("accent", "新角色名称：");
+			const inputWidth = Math.max(8, Math.min(32, width - visibleWidth("新角色名称：") - 24));
 			const inputLine = strip.input.render(inputWidth)[0] ?? "";
-			return truncateToWidth(`${label} ${inputLine} ${theme.fg("dim", "(letters, digits, - and _)")}`, width);
+			return truncateToWidth(`${label} ${inputLine} ${theme.fg("dim", "（字母、数字、- 和 _）")}`, width);
 		}
 
 		const prefix =
@@ -2322,7 +2323,7 @@ export class ModelHubComponent implements Component {
 		const sidebarLines = this.#renderSidebar(sidebarWidth, contentRows);
 
 		const out: string[] = [];
-		out.push(topBorderSplit(width, "Models", sidebarWidth));
+		out.push(topBorderSplit(width, "模型", sidebarWidth));
 		this.#contentRowStart = out.length;
 		for (let i = 0; i < contentRows; i++) {
 			out.push(splitRow(sidebarLines[i] ?? "", bodyLines[i] ?? "", width, sidebarWidth));

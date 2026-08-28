@@ -12,6 +12,7 @@ import {
 } from "@oh-my-pi/pi-tui";
 import { settings } from "../../config/settings";
 import { theme } from "../../modes/theme/theme";
+import { translateUiText } from "../localization";
 import { matchesSelectCancel, matchesSelectDown, matchesSelectUp } from "../../modes/utils/keybinding-matchers";
 import type { AuthStorage, CredentialOriginKind } from "../../session/auth-storage";
 import { OverlayPanel } from "./overlay-box";
@@ -83,7 +84,7 @@ export class OAuthSelectorComponent extends OverlayPanel {
 			requestRender?: () => void;
 		},
 	) {
-		super(mode === "login" ? "Select provider to login" : "Select provider to logout");
+		super(mode === "login" ? translateUiText("Select provider to login") : translateUiText("Select provider to logout"));
 		this.#mode = mode;
 		this.#authStorage = authStorage;
 		this.#onSelectCallback = onSelect;
@@ -224,13 +225,13 @@ export class OAuthSelectorComponent extends OverlayPanel {
 		if (state === "checking") {
 			const frameCount = theme.spinnerFrames.length;
 			const spinner = frameCount > 0 ? theme.spinnerFrames[this.#spinnerFrame % frameCount] : theme.status.pending;
-			return theme.fg("warning", ` ${spinner} checking`) + source;
+			return theme.fg("warning", ` ${spinner} 检查中`) + source;
 		}
 		if (state === "invalid") {
-			return theme.fg("error", ` ${theme.status.error} invalid`) + source;
+			return theme.fg("error", ` ${theme.status.error} 无效`) + source;
 		}
 		if (state === "valid") {
-			return theme.fg("success", ` ${theme.status.enabled} logged in`) + source;
+			return theme.fg("success", ` ${theme.status.enabled} 已登录`) + source;
 		}
 		return this.#hasSelectableAuth(providerId)
 			? theme.fg("success", ` ${theme.status.enabled} logged in`) + source
@@ -247,7 +248,7 @@ export class OAuthSelectorComponent extends OverlayPanel {
 
 	#renderStatusLine(_total: number): string {
 		const query = this.#searchQuery.trim();
-		const suffix = query ? `Search: ${this.#searchQuery}` : "Type to search";
+		const suffix = query ? `搜索：${this.#searchQuery}` : "输入文字搜索";
 		return theme.fg("muted", suffix);
 	}
 
@@ -349,9 +350,9 @@ export class OAuthSelectorComponent extends OverlayPanel {
 			const message =
 				this.#allProviders.length === 0
 					? this.#mode === "login"
-						? "No OAuth providers available"
-						: "No stored provider credentials to log out"
-					: "No matching providers";
+						? "暂无可用的 OAuth 服务商"
+						: "没有可退出登录的服务商凭据"
+					: "没有匹配的服务商";
 			this.#listContainer.addChild(new TruncatedText(theme.fg("muted", message), 0, 0));
 		}
 		if (this.#statusMessage) {
@@ -419,7 +420,7 @@ export class OAuthSelectorComponent extends OverlayPanel {
 			this.stopValidation();
 			this.#onSelectCallback(selectedProvider.id);
 		} else if (selectedProvider) {
-			this.#statusMessage = "Provider unavailable in this environment.";
+			this.#statusMessage = "当前环境中的服务商不可用。";
 			this.#updateList();
 		}
 	}

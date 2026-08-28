@@ -6,8 +6,8 @@ import { getSelectListTheme, theme } from "../../theme/theme";
 import type { SetupScene, SetupSceneController, SetupSceneHost } from "./types";
 
 class ComposerSceneController implements SetupSceneController {
-	title = "Choose composer shape";
-	subtitle = "Pick the prompt and status line layout for your workflow.";
+	title = "选择输入框样式";
+	subtitle = "选择适合你工作流的提示符和状态栏布局。";
 	#selectList: SelectList;
 	#shapes: readonly ComposerShape[];
 	#items: readonly SelectItem[];
@@ -65,11 +65,11 @@ class ComposerSceneController implements SetupSceneController {
 
 	render(width: number, maxLines?: number): readonly string[] {
 		const budget = maxLines ?? Number.POSITIVE_INFINITY;
-		const lines = [theme.fg("muted", "Select a layout; live preview updates below. Press Enter to confirm."), ""];
+		const lines = [theme.fg("muted", "选择布局，下面会实时预览。按回车确认。"), ""];
 
 		const previewLines = renderComposerShapePreview(this.#currentShape, width, this.host.ctx.statusLine);
 		if (budget - lines.length - previewLines.length - 2 >= this.#items.length) {
-			lines.push(theme.fg("muted", "Preview:"), ...previewLines, "");
+			lines.push(theme.fg("muted", "预览："), ...previewLines, "");
 		}
 
 		this.#listRowStart = lines.length;

@@ -30,6 +30,7 @@ import type { ModelPerfStats } from "../../session/agent-storage";
 import { type ConfiguredThinkingLevel, parseConfiguredThinkingLevel } from "../../thinking";
 import { thinkingLevelGlyph as sharedThinkingLevelGlyph } from "../../tools/render-utils";
 import { type ThemeColor, theme } from "../theme/theme";
+import { translateUiText } from "../localization";
 import {
 	matchesSelectCancel,
 	matchesSelectDown,
@@ -346,7 +347,7 @@ export function thinkingLevelGlyph(level: ConfiguredThinkingLevel): string {
  */
 export function formatRoleChip(role: string, assignment: RoleAssignment, settings: Settings): string {
 	const info = getRoleInfo(role, settings);
-	const label = (info.tag ?? info.name ?? role).toLowerCase();
+	const label = translateUiText(info.tag ?? info.name ?? role).toLowerCase();
 	const glyph = thinkingLevelGlyph(assignment.thinkingLevel);
 	const suffix = glyph ? ` ${theme.fg("dim", glyph)}` : "";
 	if (assignment.autoSelected) {
@@ -361,9 +362,9 @@ function isFreeModel(model: Model): boolean {
 	return !cost || (cost.input === 0 && cost.output === 0);
 }
 
-/** `$in/out` per-million cost pair; `free` when both legs are zero. */
+/** `$in/out` per-million cost pair; `免费` when both legs are zero. */
 function formatCostPair(model: Model): string {
-	if (isFreeModel(model)) return "free";
+	if (isFreeModel(model)) return "免费";
 	const cost = model.cost;
 
 	const fmt = (n: number): string => {
@@ -407,7 +408,7 @@ function formatDescription(description: string): string {
 function formatContext(model: Model): string {
 	const ctx = model.contextWindow ?? 0;
 	if (ctx <= 0) return "";
-	return `${formatNumber(ctx).toLowerCase()} ${theme.icon.context.replace(/:$/, "")}`;
+	return `${formatNumber(ctx).toLowerCase()} 上下文`;
 }
 
 /** `118t/s` average output speed; one decimal below 10 t/s. */
@@ -932,7 +933,7 @@ export class ModelBrowser implements Component {
 		const currentMark =
 			item.selector === this.#currentSelector ? ` ${theme.fg("success", theme.status.enabled)}` : "";
 		const overLimit = overContext
-			? ` ${theme.status.disabled} context>${formatNumber(item.model.contextWindow ?? 0).toLowerCase()}`
+			? ` ${theme.status.disabled} 上下文>${formatNumber(item.model.contextWindow ?? 0).toLowerCase()}`
 			: "";
 		let left = `${prefix}${providerPrefix}${name}${currentMark}${overLimit}`;
 
@@ -977,20 +978,20 @@ export class ModelBrowser implements Component {
 		const facts: string[] = [model.name];
 		// Upstream badges sit next to the name; the provider blurb goes last so
 		// width truncation eats prose before context, cost, or perf facts.
-		if (model.isNew) facts.push("new");
-		if (model.isBeta) facts.push("beta");
-		if (model.isRecommended) facts.push("recommended");
-		if (model.contextWindow) facts.push(`${formatNumber(model.contextWindow).toLowerCase()} ctx`);
-		if (model.maxTokens) facts.push(`${formatNumber(model.maxTokens).toLowerCase()} out`);
-		facts.push(`${formatCostPair(model)} per M`);
-		if (model.reasoning) facts.push("reasoning");
-		if (model.input.includes("image")) facts.push("vision");
+		if (model.isNew) facts.push("新");
+		if (model.isBeta) facts.push("测试版");
+		if (model.isRecommended) facts.push("推荐");
+		if (model.contextWindow) facts.push(`${formatNumber(model.contextWindow).toLowerCase()} 上下文`);
+		if (model.maxTokens) facts.push(`${formatNumber(model.maxTokens).toLowerCase()} 输出`);
+		facts.push(`${formatCostPair(model)} / 百万 token`);
+		if (model.reasoning) facts.push("推理");
+		if (model.input.includes("image")) facts.push("视觉");
 		const intelligence = formatIntelligence(model);
 		if (intelligence) facts.push(intelligence);
 		const perf = this.#perf.get(selected.selector);
 		if (perf) {
 			facts.push(`~${formatTps(perf.tps)}`);
-			if (perf.ttftMs !== null) facts.push(`${formatTtft(perf.ttftMs)} ttft`);
+			if (perf.ttftMs !== null) facts.push(`${formatTtft(perf.ttftMs)} 首 token`);
 		} else if (model.tps != null && Number.isFinite(model.tps) && model.tps > 0) {
 			facts.push(`~${formatTps(model.tps)}`);
 		}
@@ -1001,13 +1002,13 @@ export class ModelBrowser implements Component {
 		const line1 = truncateToWidth(theme.fg("muted", `  ${facts.join(" · ")}`), width);
 
 		if (this.isOverContext(selected)) {
-			const warning = `  ${theme.status.disabled} context ${formatNumber(this.#currentContextTokens).toLowerCase()} exceeds ${formatNumber(model.contextWindow ?? 0).toLowerCase()} limit · compacts with current model, then switches`;
+			const warning = `  ${theme.status.disabled} 上下文 ${formatNumber(this.#currentContextTokens).toLowerCase()} 超过 ${formatNumber(model.contextWindow ?? 0).toLowerCase()} 限制 · 将先压缩再切换`;
 			return [line1, truncateToWidth(theme.fg("warning", warning), width)];
 		}
 
 		const chips: string[] = [];
 		if (selected.selector === this.#currentSelector) {
-			chips.push(theme.fg("success", `${theme.status.enabled} current`));
+			chips.push(theme.fg("success", `${theme.status.enabled} 当前`));
 		}
 		const seen = new Set<string>();
 		const pushRole = (role: string) => {
@@ -1043,7 +1044,7 @@ export class ModelBrowser implements Component {
 
 		if (total === 0) {
 			const message =
-				this.#emptyText?.() ?? (this.query.trim() ? "  No matching models" : "  No models available in this scope");
+				this.#emptyText?.() ?? (this.query.trim() ? "  没有匹配的模型" : "  当前范围内没有可用模型");
 			lines.push(truncateToWidth(theme.fg("muted", message), width));
 			for (let i = 1; i < this.#maxVisible; i++) lines.push("");
 		} else {

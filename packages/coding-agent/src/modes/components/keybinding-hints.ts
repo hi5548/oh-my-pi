@@ -4,6 +4,7 @@
 import { getKeybindings, type Keybinding } from "@oh-my-pi/pi-tui";
 import { type AppKeybinding, formatKeyHints, type KeybindingsManager } from "../../config/keybindings";
 import { theme } from "../../modes/theme/theme";
+import { translateUiText } from "../localization";
 
 /**
  * Get display string for an editor action.
@@ -28,7 +29,7 @@ export function appKey(keybindings: KeybindingsManager, action: AppKeybinding): 
  * @returns Formatted string with dim key and muted description
  */
 export function keyHint(action: Keybinding, description: string): string {
-	return theme.fg("dim", editorKey(action)) + theme.fg("muted", ` ${description}`);
+	return theme.fg("dim", editorKey(action)) + theme.fg("muted", ` ${translateUiText(description)}`);
 }
 
 /**
@@ -41,7 +42,7 @@ export function keyHint(action: Keybinding, description: string): string {
  * @returns Formatted string with dim key and muted description
  */
 export function appKeyHint(keybindings: KeybindingsManager, action: AppKeybinding, description: string): string {
-	return theme.fg("dim", appKey(keybindings, action)) + theme.fg("muted", ` ${description}`);
+	return theme.fg("dim", appKey(keybindings, action)) + theme.fg("muted", ` ${translateUiText(description)}`);
 }
 
 /**
@@ -52,5 +53,5 @@ export function appKeyHint(keybindings: KeybindingsManager, action: AppKeybindin
  * @returns Formatted string with dim key and muted description
  */
 export function rawKeyHint(key: string, description: string): string {
-	return theme.fg("dim", key) + theme.fg("muted", ` ${description}`);
+	return theme.fg("dim", key) + theme.fg("muted", ` ${translateUiText(description)}`);
 }

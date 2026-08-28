@@ -20,7 +20,7 @@ import {
 	syncAllSessions,
 } from "./aggregator";
 import { decodeEmbeddedClientArchive } from "./embedded-client";
-import embeddedClientArchiveTxt from "./embedded-client.generated.txt";
+import embeddedClientArchiveTxt from "./embedded-client.generated.txt" with { type: "text" };
 import { getGainDashboardStats } from "./gain-aggregator";
 import {
 	prepareStatsPort,

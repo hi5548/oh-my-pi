@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+RUNTIME_MODULES="${BUN_INSTALL:-$HOME/.bun}/install/global/node_modules"
+
+if [ ! -e "$ROOT/node_modules" ] && [ -d "$RUNTIME_MODULES" ]; then
+  ln -s "$RUNTIME_MODULES" "$ROOT/node_modules"
+fi
+
+if [ ! -d "$ROOT/node_modules/@oh-my-pi/pi-natives" ]; then
+  echo "未找到 oh-my-pi 的运行组件，请先安装原版 omp。" >&2
+  exit 1
+fi
+
+exec bun "$ROOT/packages/coding-agent/dist/cli.js" "$@"
