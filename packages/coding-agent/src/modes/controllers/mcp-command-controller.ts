@@ -2068,14 +2068,14 @@ export class MCPCommandController {
 
 				const lines = [
 					"",
-					theme.fg("success", `✓ Reauthorized "${name}" (${found.scope} config)`),
+					theme.fg("success", `✓ 已重新授权 "${name}"（${found.scope} 配置）`),
 					"",
-					`  Status: ${
+					`  状态：${
 						state === "connected"
-							? theme.fg("success", "connected")
+							? theme.fg("success", "已连接")
 							: state === "connecting"
-								? theme.fg("muted", "connecting")
-								: theme.fg("warning", "not connected")
+								? theme.fg("muted", "正在连接")
+								: theme.fg("warning", "未连接")
 					}`,
 					"",
 				];
@@ -2084,7 +2084,7 @@ export class MCPCommandController {
 			return updatedConfig;
 		} catch (error) {
 			if (error instanceof MCPOAuthCancelledError) {
-				if (!options.silent) this.ctx.showStatus(`Reauthorization cancelled for "${name}"`);
+				if (!options.silent) this.ctx.showStatus(`已取消对 "${name}" 的重新授权`);
 				return;
 			}
 			if (!options.silent) {

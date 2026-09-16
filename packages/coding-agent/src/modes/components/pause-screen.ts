@@ -52,10 +52,7 @@ const MIN_FULL_WIDTH = 64;
 const MIN_FULL_HEIGHT = 18;
 
 const TITLE = "P A U S E D";
-const BODY_LINES = [
-	"主代理、子代理和顾问将在下一步暂停。",
-	"正在执行的调用会完成；恢复前不会开始新的任务。",
-] as const;
+const BODY_LINES = ["主代理、子代理和顾问将在下一步暂停。", "正在执行的调用会完成；恢复前不会开始新的任务。"] as const;
 const RESUME_HINT = "Esc · 回车 · 空格键  恢复";
 
 function centerLine(line: string, width: number): string {

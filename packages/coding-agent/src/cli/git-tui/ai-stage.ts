@@ -75,9 +75,9 @@ export async function aiStage(options: AiStageOptions): Promise<AiStageOutcome> 
 	const repo = vcs.requireGit(cwd);
 	const untracked = options.files.filter(file => file.kind === "untracked");
 	const tracked = options.files.filter(file => file.kind !== "untracked" && file.kind !== "conflicted");
-	if (tracked.length === 0 && untracked.length === 0) throw new Error("No unstaged changes to filter");
+	if (tracked.length === 0 && untracked.length === 0) throw new Error("没有可筛选的未暂存改动");
 
-	onProgress?.("Resolving model…");
+	onProgress?.("正在解析模型…");
 	const settings = await Settings.init({ cwd });
 	const authStorage = await discoverAuthStorage();
 	try {
@@ -85,10 +85,10 @@ export async function aiStage(options: AiStageOptions): Promise<AiStageOutcome> 
 		await registry.refresh();
 		await loadCliExtensionProviders(registry, settings, cwd);
 		const model = resolveRoleSelection(["tiny", "smol"], settings, registry.getAvailable())?.model;
-		if (!model) throw new Error("No tiny/smol model available for AI staging");
+		if (!model) throw new Error("没有可用于 AI 暂存的 tiny/smol 模型");
 		const sessionId = Bun.randomUUIDv7();
 		if (!(await registry.getApiKey(model, sessionId)))
-			throw new Error(`No API key for ${model.provider}/${model.id}`);
+			throw new Error(`缺少 ${model.provider}/${model.id} 的 API key`);
 		const complete = createCompleter(model, registry.resolver(model, sessionId), sessionId, signal);
 
 		const rawDiff = tracked.length > 0 ? await repo.diffText({ files: tracked.map(file => file.path) }, signal) : "";
@@ -107,7 +107,7 @@ export async function aiStage(options: AiStageOptions): Promise<AiStageOutcome> 
 
 		// File pass: one completion sees the whole (batched) list, so files are
 		// picked as a coherent set instead of N independent coin flips.
-		onProgress?.(`Choosing files… (${candidates.length} changed)`);
+		onProgress?.(`正在选择文件…（${candidates.length} 个改动）`);
 		const batches: Candidate[][] = [];
 		for (let start = 0; start < candidates.length; start += FILE_BATCH) {
 			batches.push(candidates.slice(start, start + FILE_BATCH));
@@ -127,7 +127,7 @@ export async function aiStage(options: AiStageOptions): Promise<AiStageOutcome> 
 				}),
 			)
 		).flat();
-		onProgress?.(`Picked ${picked.length}/${candidates.length} files`);
+		onProgress?.(`已选中 ${picked.length}/${candidates.length} 个文件`);
 		// Zero picks usually means the request is about change content ("comment
 		// edits"), which paths alone cannot answer — advance everything and let
 		// the hunk pass decide. A non-authoritative file scope must never stage
@@ -165,7 +165,7 @@ export async function aiStage(options: AiStageOptions): Promise<AiStageOutcome> 
 					changed: bound(job.changed, HUNK_CHARS),
 				}),
 			);
-			onProgress?.(`Choosing hunks… ${++hunksJudged}/${jobs.length}`);
+			onProgress?.(`正在选择 hunk… ${++hunksJudged}/${jobs.length}`);
 			return parseVerdict(reply);
 		});
 
@@ -201,7 +201,7 @@ export async function aiStage(options: AiStageOptions): Promise<AiStageOutcome> 
 		const untrackedAccepted = fileScopeAuthoritative
 			? matched.filter(candidate => !candidate.diff).map(candidate => candidate.file.path)
 			: [];
-		if (selections.length > 0 || untrackedAccepted.length > 0) onProgress?.("Staging…");
+		if (selections.length > 0 || untrackedAccepted.length > 0) onProgress?.("正在暂存…");
 		if (selections.length > 0) await repo.stageHunks(selections, rawDiff || null, signal);
 		if (untrackedAccepted.length > 0) await repo.stageFiles(untrackedAccepted, signal);
 
@@ -235,7 +235,7 @@ function createCompleter(
 			{ signal, provider: model.provider },
 		);
 		if (response.stopReason === "error") {
-			throw new Error(`AI staging request failed: ${response.errorMessage ?? "unknown error"}`);
+			throw new Error(`AI 暂存请求失败：${response.errorMessage ?? "未知错误"}`);
 		}
 		return extractText(response.content);
 	};

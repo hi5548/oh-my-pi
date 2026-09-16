@@ -132,9 +132,7 @@ async function applyComputerUseToggle(session: AgentSession, enable: boolean): P
 		session.settings.override("computer.enabled", previous);
 		throw error;
 	}
-	return enable
-		? `本会话已启用桌面操控。${formatComputerUseStatus(session)}`
-		: "本会话已禁用桌面操控。";
+	return enable ? `本会话已启用桌面操控。${formatComputerUseStatus(session)}` : "本会话已禁用桌面操控。";
 }
 
 const AUTOCOMPLETE_DETAIL_LIMIT = 48;
@@ -487,22 +485,22 @@ export const BUILTIN_MODE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec> = [
 	{
 		name: "skillful",
 		icon: "compass",
-		description: "Toggle listing available skills in the system prompt (session only)",
-		acpDescription: "Toggle skill listing",
+		description: "切换系统提示词中是否列出可用技能（仅本会话）",
+		acpDescription: "切换技能列表",
 		acpInputHint: "[on|off|status]",
 		subcommands: [
-			{ name: "on", description: "List skills in the prompt for this session" },
-			{ name: "off", description: "Omit the skills listing for this session" },
-			{ name: "status", description: "Show skill listing status" },
+			{ name: "on", description: "在本会话的提示词中列出技能" },
+			{ name: "off", description: "在本会话中不列出技能" },
+			{ name: "status", description: "查看技能列表状态" },
 		],
 		allowArgs: true,
 		getTuiAutocompleteDescription: runtime =>
-			`Skill listing: ${runtime.ctx.session.settings.get("skillful") ? "on" : "off"}`,
+			`技能列表：${runtime.ctx.session.settings.get("skillful") ? "开启" : "关闭"}`,
 		handle: async (command, runtime) => {
 			const arg = command.args.trim().toLowerCase();
 			if (arg === "status") {
 				await runtime.output(
-					`Skill listing: ${runtime.session.settings.get("skillful") ? "on" : "off"} (session override; default from the skillful setting).`,
+					`技能列表：${runtime.session.settings.get("skillful") ? "开启" : "关闭"}（会话级覆盖；默认值来自 skillful 设置）。`,
 				);
 				return commandConsumed();
 			}
@@ -513,15 +511,15 @@ export const BUILTIN_MODE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec> = [
 						: arg === "off"
 							? await runtime.session.setSkillful(false)
 							: await runtime.session.toggleSkillful();
-				await runtime.output(`Skill listing ${enabled ? "enabled" : "disabled"} for this session.`);
+				await runtime.output(`本会话的技能列表已${enabled ? "启用" : "禁用"}。`);
 				return commandConsumed();
 			}
-			return usage("Usage: /skillful [on|off|status]", runtime);
+			return usage("用法：/skillful [on|off|status]", runtime);
 		},
 		handleTui: async (command, runtime) => {
 			const arg = command.args.trim().toLowerCase();
 			if (arg === "status") {
-				runtime.ctx.showStatus(`Skill listing: ${runtime.ctx.session.settings.get("skillful") ? "on" : "off"}.`);
+				runtime.ctx.showStatus(`技能列表：${runtime.ctx.session.settings.get("skillful") ? "开启" : "关闭"}。`);
 				runtime.ctx.editor.setText("");
 				return;
 			}
@@ -532,11 +530,11 @@ export const BUILTIN_MODE_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec> = [
 						: arg === "off"
 							? await runtime.ctx.session.setSkillful(false)
 							: await runtime.ctx.session.toggleSkillful();
-				runtime.ctx.showStatus(`Skill listing ${enabled ? "enabled" : "disabled"} for this session.`);
+				runtime.ctx.showStatus(`本会话的技能列表已${enabled ? "启用" : "禁用"}。`);
 				runtime.ctx.editor.setText("");
 				return;
 			}
-			runtime.ctx.showStatus("Usage: /skillful [on|off|status]");
+			runtime.ctx.showStatus("用法：/skillful [on|off|status]");
 			runtime.ctx.editor.setText("");
 		},
 	},

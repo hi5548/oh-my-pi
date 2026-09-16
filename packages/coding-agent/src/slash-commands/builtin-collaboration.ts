@@ -198,11 +198,11 @@ export const BUILTIN_COLLABORATION_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpe
 	{
 		name: "trace",
 		icon: "stats",
-		description: "Open this session's trace in the stats dashboard",
+		description: "在统计面板中打开本会话的追踪记录",
 		handle: async (_command, runtime) => {
 			const sessionFile = runtime.session.sessionFile;
 			if (!sessionFile) {
-				await runtime.output("No session file yet — send a message first.");
+				await runtime.output("还没有会话文件，请先发送一条消息。");
 				return commandConsumed();
 			}
 			try {
@@ -214,7 +214,7 @@ export const BUILTIN_COLLABORATION_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpe
 				await runtime.output(url);
 				return commandConsumed();
 			} catch (err) {
-				return usage(`Failed to open trace: ${errorMessage(err)}`, runtime);
+				return usage(`打开追踪记录失败：${errorMessage(err)}`, runtime);
 			}
 		},
 		handleTui: async (_command, runtime) => {
@@ -336,7 +336,7 @@ export const BUILTIN_COLLABORATION_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpe
 				// link is a deliberate per-host act (`omp collab link <id> [--view]`),
 				// so a listing can be shown or logged without granting anything.
 				if (rest.trim()) {
-					ctx.showError(`Usage: /collab list — for links or JSON use \`${APP_NAME} collab link|list\``);
+					ctx.showError(`用法：/collab list — 需要链接或 JSON 请用 \`${APP_NAME} collab link|list\``);
 					return;
 				}
 				let hosts: CollabHostSnapshot[];
@@ -345,14 +345,14 @@ export const BUILTIN_COLLABORATION_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpe
 				} catch (err) {
 					ctx.showError(
 						truncateToWidth(
-							sanitizeDisplayLine(`Failed to list collab hosts: ${errorMessage(err)}`),
+							sanitizeDisplayLine(`获取协作主机列表失败：${errorMessage(err)}`),
 							TRUNCATE_LENGTHS.LINE,
 						),
 					);
 					return;
 				}
 				if (hosts.length === 0) {
-					ctx.showStatus("No active Collab hosts");
+					ctx.showStatus("没有正在运行的协作主机");
 					return;
 				}
 				const bullet = theme.fg("accent", theme.format.bullet);
@@ -374,8 +374,8 @@ export const BUILTIN_COLLABORATION_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpe
 						`pid ${host.pid}`,
 						`${guests} guest${guests === 1 ? "" : "s"}`,
 						host.access,
-						host.relayConnected ? "relay connected" : "relay reconnecting",
-						...(host.inputRequired ? ["input required"] : []),
+						host.relayConnected ? "中继已连接" : "中继正在重连",
+						...(host.inputRequired ? ["需要输入"] : []),
 						truncateToWidth(sanitizeDisplayLine(shortenPath(host.cwd)), TRUNCATE_LENGTHS.TITLE),
 					].join(", ");
 					lines.push(
@@ -404,8 +404,8 @@ export const BUILTIN_COLLABORATION_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpe
 				ctx.showError(`Failed to start collab session: ${errorMessage(err)}`);
 				return;
 			}
-			let heading = existing ? "Collab session restarted with control access" : "Collab session started!";
-			if (host === existing) heading = view ? "Read-only collab session active" : "Collab session active";
+			let heading = existing ? "协作会话已重新启动并获得控制权限" : "协作会话已启动！";
+			if (host === existing) heading = view ? "只读协作会话已启用" : "协作会话已启用";
 			showCollabLink(ctx, host, heading, view);
 		},
 	},
@@ -483,7 +483,7 @@ export const BUILTIN_COLLABORATION_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpe
 		handle: async (command, runtime) => {
 			const arg = command.args.toLowerCase();
 			const enabled = runtime.settings.get("browser.enabled" as SettingPath) as boolean;
-			if (!enabled) return usage("Browser capability is disabled (enable in settings).", runtime);
+			if (!enabled) return usage("浏览器功能已禁用（请在设置中启用）。", runtime);
 			const current = runtime.settings.get("browser.headless" as SettingPath) as boolean;
 			let next = current;
 			if (!arg) next = !current;
@@ -509,7 +509,7 @@ export const BUILTIN_COLLABORATION_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpe
 			const current = settings.get("browser.headless" as SettingPath) as boolean;
 			let next = current;
 			if (!(settings.get("browser.enabled" as SettingPath) as boolean)) {
-				runtime.ctx.showWarning("Browser capability is disabled (enable in settings)");
+				runtime.ctx.showWarning("浏览器功能已禁用（请在设置中启用）");
 				runtime.ctx.editor.setText("");
 				return;
 			}

@@ -381,7 +381,7 @@ export class CopySelectorComponent implements Component {
 				undefined,
 				{
 					color: OUTLINE_COLOR,
-					caption: blocks.length > 0 ? `${blocks.length} block${blocks.length === 1 ? "" : "s"} →` : undefined,
+					caption: blocks.length > 0 ? `${blocks.length} 个内容块 →` : undefined,
 				},
 			);
 		}
@@ -401,15 +401,15 @@ export class CopySelectorComponent implements Component {
 		const output: string[] = [];
 		output.push(...this.#border.render(width));
 		output.push(
-			` ${theme.cmd.copy} ${theme.bold("Copy")}${theme.sep.dot}${theme.fg("dim", "pick what to put on the clipboard")}`,
+			` ${theme.cmd.copy} ${theme.bold("复制")}${theme.sep.dot}${theme.fg("dim", "选择要复制到剪贴板的内容")}`,
 		);
 		output.push(...this.#border.render(width));
 		output.push(...this.#scrollView.render(width));
 		const selectedBlock = this.#blocks?.[this.#blockSelected];
-		const openHint = selectedBlock?.href && this.deps.onOpen ? "  o open" : "";
+		const openHint = selectedBlock?.href && this.deps.onOpen ? "  o 打开" : "";
 		const hint = this.#blocks
-			? `${this.#blockSelected + 1}/${this.#blocks.length}  ↑/↓ block  ←/esc back  enter copy${openHint}  click ${theme.cmd.copy}/${theme.cmd.share}`
-			: `${this.#targets.length > 0 ? `${this.#selected + 1}/${this.#targets.length}  ` : ""}↑/↓ step  ${blocks.length > 0 ? "→ blocks  " : ""}enter copy  ${this.#truncated ? "a earlier turns  " : ""}ctrl+o expand  esc close`;
+			? `${this.#blockSelected + 1}/${this.#blocks.length}  ↑/↓ 内容块  ←/Esc 返回  回车复制${openHint}  点击 ${theme.cmd.copy}/${theme.cmd.share}`
+			: `${this.#targets.length > 0 ? `${this.#selected + 1}/${this.#targets.length}  ` : ""}↑/↓ 切换  ${blocks.length > 0 ? "→ 内容块  " : ""}回车复制  ${this.#truncated ? "a 更早回合  " : ""}ctrl+o 展开  Esc 关闭`;
 		// The hint grows with the load-all affordance; an over-width row would
 		// wrap and shift the mouse rows CONTENT_TOP/CHROME_ROWS assume.
 		output.push(` ${theme.fg("dim", truncateToWidth(hint, Math.max(0, width - 1)))}`);
@@ -435,17 +435,17 @@ export class CopySelectorComponent implements Component {
 			const styled = block.language ? highlightCode(shown.join("\n"), block.language) : shown;
 			const rows = styled.map(row => truncateToWidth(replaceTabs(row), inner));
 			if (raw.length > shown.length) {
-				rows.push(theme.fg("dim", `… +${raw.length - shown.length} more lines`));
+				rows.push(theme.fg("dim", `… 还有 ${raw.length - shown.length} 行`));
 			}
 			const selected = index === this.#blockSelected;
 			const captionColor: ThemeColor = selected ? OUTLINE_COLOR : "dim";
 			const controls: Array<{ action: ControlRegion["action"]; text: string }> = [
-				{ action: "copy", text: `${theme.cmd.copy} copy` },
+				{ action: "copy", text: `${theme.cmd.copy} 复制` },
 			];
-			if (block.href && this.deps.onOpen) controls.push({ action: "open", text: `${theme.cmd.share} open` });
+			if (block.href && this.deps.onOpen) controls.push({ action: "open", text: `${theme.cmd.share} 打开` });
 			const controlsWidth = controls.reduce((sum, control) => sum + visibleWidth(control.text) + 2, 0);
 			const summary = truncateToWidth(
-				`${index + 1}/${blocks.length}${theme.sep.dot}${block.label}${theme.sep.dot}${raw.length} line${raw.length === 1 ? "" : "s"}`,
+				`${index + 1}/${blocks.length}${theme.sep.dot}${block.label}${theme.sep.dot}${raw.length} 行`,
 				Math.max(4, inner - controlsWidth),
 			);
 			// Caption: two-space gutter, summary, then the controls, each preceded by two spaces.
@@ -532,19 +532,19 @@ function pushMarkdownBlocks(blocks: CopyBlock[], text: string): void {
 	for (const block of extractBlocks(text)) {
 		if (block.kind === "code") {
 			blocks.push({
-				label: block.lang ? `${block.lang} code` : "code",
+				label: block.lang ? `${block.lang} 代码` : "代码",
 				content: block.code,
 				language: block.lang || undefined,
 			});
 		} else {
-			blocks.push({ label: "quote", content: block.text });
+			blocks.push({ label: "引用", content: block.text });
 		}
 	}
 	// Links follow the message's blocks. The preview shows the whole URL on one
 	// row, so a link the transcript wrapped is copied or opened intact.
 	for (const link of extractLinks(text)) {
 		blocks.push({
-			label: link.text !== link.href ? `link${theme.sep.dot}${link.text}` : "link",
+			label: link.text !== link.href ? `链接${theme.sep.dot}${link.text}` : "链接",
 			content: link.href,
 			href: link.href,
 		});
@@ -568,7 +568,7 @@ function collectBlocks(entries: readonly TranscriptEntry[]): CopyBlock[] {
 					const command = commandFromToolCall(content);
 					if (command) {
 						blocks.push({
-							label: command.kind === "bash" ? "bash command" : "eval code",
+							label: command.kind === "bash" ? "bash 命令" : "eval 代码",
 							content: command.code,
 							language: command.language,
 						});
@@ -578,16 +578,16 @@ function collectBlocks(entries: readonly TranscriptEntry[]): CopyBlock[] {
 			}
 			case "toolResult": {
 				const text = toolResultText(message);
-				if (text) blocks.push({ label: `${message.toolName} result`, content: text });
+				if (text) blocks.push({ label: `${message.toolName} 结果`, content: text });
 				break;
 			}
 			case "bashExecution":
-				blocks.push({ label: "command", content: message.command, language: "bash" });
-				if (message.output.trim()) blocks.push({ label: "output", content: message.output });
+				blocks.push({ label: "命令", content: message.command, language: "bash" });
+				if (message.output.trim()) blocks.push({ label: "输出", content: message.output });
 				break;
 			case "pythonExecution":
-				blocks.push({ label: "eval code", content: message.code, language: "python" });
-				if (message.output.trim()) blocks.push({ label: "output", content: message.output });
+				blocks.push({ label: "eval 代码", content: message.code, language: "python" });
+				if (message.output.trim()) blocks.push({ label: "输出", content: message.output });
 				break;
 			default:
 				break;
@@ -602,35 +602,35 @@ function targetCopy(target: OutlineTarget, blocks: readonly CopyBlock[]): { cont
 	const message = transcriptEntryMessage(entry);
 	switch (message?.role) {
 		case "user":
-			return { content: rawUserText(message), label: "user message" };
+			return { content: rawUserText(message), label: "用户消息" };
 		case "assistant": {
 			const text = assistantVisibleText(message);
-			if (text) return { content: text, label: "assistant message" };
+			if (text) return { content: text, label: "助手消息" };
 			break;
 		}
 		case "toolResult": {
 			const text = toolResultText(message);
-			if (text) return { content: text, label: `${message.toolName} result` };
+			if (text) return { content: text, label: `${message.toolName} 结果` };
 			break;
 		}
 		case "bashExecution":
 			return {
 				content: [message.command, message.output].filter(part => part.trim()).join("\n"),
-				label: "bash execution",
+				label: "bash 执行",
 			};
 		case "pythonExecution":
 			return {
 				content: [message.code, message.output].filter(part => part.trim()).join("\n"),
-				label: "eval execution",
+				label: "eval 执行",
 			};
 		case "compactionSummary":
 		case "branchSummary":
-			return { content: message.summary, label: "summary" };
+			return { content: message.summary, label: "摘要" };
 		case "custom":
 		case "hookMessage": {
 			// A user-invoked skill/collab prompt copies as what the user typed, not the expanded body.
 			const draft = message.role === "custom" ? userTurnDraft(entry) : undefined;
-			if (draft?.trim()) return { content: draft, label: "user message" };
+			if (draft?.trim()) return { content: draft, label: "用户消息" };
 			const content =
 				typeof message.content === "string"
 					? message.content
@@ -638,12 +638,12 @@ function targetCopy(target: OutlineTarget, blocks: readonly CopyBlock[]): { cont
 							.filter((block): block is { type: "text"; text: string } => block.type === "text")
 							.map(block => block.text)
 							.join("\n");
-			if (content.trim()) return { content, label: "message" };
+			if (content.trim()) return { content, label: "消息" };
 			break;
 		}
 		default:
 			break;
 	}
 	// No direct prose (e.g. a pure tool turn): fall back to its blocks joined.
-	return { content: blocks.map(block => block.content).join("\n\n"), label: "turn content" };
+	return { content: blocks.map(block => block.content).join("\n\n"), label: "回合内容" };
 }

@@ -679,7 +679,7 @@ export function renderSubagentHudLines(sessions: ObservableSession[], columns: n
 					truncateToWidth(
 						`${outerIndent}${theme.fg(
 							"dim",
-							layout.toggle === "expand" ? `… ${running.length - layout.itemRows} more — expand` : "… show less",
+							layout.toggle === "expand" ? `… 还有 ${running.length - layout.itemRows} 项 — 展开` : "… 收起",
 						)}`,
 						columns,
 						"",
@@ -3847,9 +3847,7 @@ export class InteractiveMode implements InteractiveModeContext {
 	 * point them at the second `/plan` toggle that fully exits instead.
 	 */
 	#warnPlanModeBlocks(): void {
-		this.showWarning(
-			this.planModePaused ? "Plan mode is paused — run /plan again to fully exit." : "Exit plan mode first.",
-		);
+		this.showWarning(this.planModePaused ? "计划模式已暂停 — 再次运行 /plan 可完全退出。" : "请先退出计划模式。");
 	}
 
 	async #enterGoalMode(options: { objective?: string; resume?: boolean; silent?: boolean }): Promise<void> {

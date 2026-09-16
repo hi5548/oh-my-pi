@@ -1043,8 +1043,7 @@ export class ModelBrowser implements Component {
 		this.#windowCount = Math.max(0, endIndex - startIndex);
 
 		if (total === 0) {
-			const message =
-				this.#emptyText?.() ?? (this.query.trim() ? "  没有匹配的模型" : "  当前范围内没有可用模型");
+			const message = this.#emptyText?.() ?? (this.query.trim() ? "  没有匹配的模型" : "  当前范围内没有可用模型");
 			lines.push(truncateToWidth(theme.fg("muted", message), width));
 			for (let i = 1; i < this.#maxVisible; i++) lines.push("");
 		} else {

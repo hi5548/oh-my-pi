@@ -1116,8 +1116,8 @@ export class ToolExecutionComponent extends Container {
 					const pendingText = renderStatusLine(
 						{
 							iconOverride: spinner,
-							title: "Edit",
-							description: theme.fg("dim", `${remaining} more file${remaining > 1 ? "s" : ""} pending…`),
+							title: "编辑",
+							description: theme.fg("dim", `还有 ${remaining} 个文件待处理…`),
 						},
 						theme,
 					);

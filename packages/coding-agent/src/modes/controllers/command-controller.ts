@@ -158,7 +158,7 @@ export class CommandController {
 	async handleTraceCommand(): Promise<void> {
 		const sessionFile = this.ctx.session.sessionFile;
 		if (!sessionFile) {
-			this.ctx.showWarning("No session file yet — send a message first.");
+			this.ctx.showWarning("还没有会话文件，请先发送一条消息。");
 			return;
 		}
 		try {
@@ -168,9 +168,9 @@ export class CommandController {
 			const { hostname, port } = await startServer();
 			const url = `${formatStatsDashboardUrl(hostname, port)}/#/traces?s=${encodeURIComponent(sessionFile)}`;
 			this.openInBrowser(url);
-			this.ctx.showStatus(`Trace: ${url}`);
+			this.ctx.showStatus(`追踪记录：${url}`);
 		} catch (error: unknown) {
-			this.ctx.showError(`Failed to open trace: ${error instanceof Error ? error.message : "Unknown error"}`);
+			this.ctx.showError(`打开追踪记录失败：${error instanceof Error ? error.message : "Unknown error"}`);
 		}
 	}
 
@@ -738,12 +738,12 @@ export class CommandController {
 					session: this.ctx.session,
 				});
 				if (!payload) {
-					this.ctx.showWarning(`Memory queue is not available for the ${backend.id} backend.`);
+					this.ctx.showWarning(`后端 ${backend.id} 不支持记忆队列。`);
 					return;
 				}
-				showMarkdownPanel(this.ctx, "Memory Queue", payload);
+				showMarkdownPanel(this.ctx, "记忆队列", payload);
 			} catch (error) {
-				this.ctx.showError(`Memory queue failed: ${error instanceof Error ? error.message : String(error)}`);
+				this.ctx.showError(`记忆队列失败：${error instanceof Error ? error.message : String(error)}`);
 			}
 			return;
 		}
@@ -751,9 +751,9 @@ export class CommandController {
 		if (action === "sync") {
 			try {
 				await backend.enqueue(agentDir, this.ctx.sessionManager.getCwd(), this.ctx.session);
-				this.ctx.showStatus("Memory consolidation ran.");
+				this.ctx.showStatus("记忆整理已完成。");
 			} catch (error) {
-				this.ctx.showError(`Memory sync failed: ${error instanceof Error ? error.message : String(error)}`);
+				this.ctx.showError(`记忆同步失败：${error instanceof Error ? error.message : String(error)}`);
 			}
 			return;
 		}
@@ -766,9 +766,11 @@ export class CommandController {
 					this.ctx.showWarning(memoryStatsUnavailableMessage(backend.id, action));
 					return;
 				}
-				showMarkdownPanel(this.ctx, `Memory ${action === "stats" ? "Stats" : "Diagnostics"}`, payload);
+				showMarkdownPanel(this.ctx, `记忆${action === "stats" ? "统计" : "诊断"}`, payload);
 			} catch (error) {
-				this.ctx.showError(`Memory ${action} failed: ${error instanceof Error ? error.message : String(error)}`);
+				this.ctx.showError(
+					`记忆${action === "stats" ? "统计" : "诊断"}失败：${error instanceof Error ? error.message : String(error)}`,
+				);
 			}
 			return;
 		}
@@ -778,7 +780,7 @@ export class CommandController {
 			return;
 		}
 
-		this.ctx.showError("Usage: /memory <view|stats|diagnose|clear|reset|enqueue|rebuild|queue|sync|mm ...>");
+		this.ctx.showError("用法：/memory <view|stats|diagnose|clear|reset|enqueue|rebuild|queue|sync|mm ...>");
 	}
 
 	async #handleMentalModelsSubcommand(argumentText: string): Promise<void> {
@@ -1026,7 +1028,7 @@ export class CommandController {
 		}
 	}
 
-	async #runNewSessionFlow(options?: NewSessionOptions, label: string = "New session started"): Promise<void> {
+	async #runNewSessionFlow(options?: NewSessionOptions, label: string = "新会话已开始"): Promise<void> {
 		this.ctx.clearTransientSessionUi();
 
 		if (this.ctx.session.isCompacting) {
@@ -1105,10 +1107,10 @@ export class CommandController {
 
 	async handleDeleteCommand(): Promise<void> {
 		if (!this.ctx.sessionManager.getSessionFile()) {
-			this.ctx.showError("Nothing to delete (in-memory session)");
+			this.ctx.showError("没有可删除的内容（内存中的会话）");
 			return;
 		}
-		await this.#runNewSessionFlow({ drop: true }, "Session deleted");
+		await this.#runNewSessionFlow({ drop: true }, "会话已删除");
 	}
 
 	async handleForkCommand(): Promise<void> {
@@ -1227,7 +1229,7 @@ export class CommandController {
 	 */
 	async handleWorktreeCommand(branch?: string): Promise<void> {
 		if (this.ctx.session.isStreaming) {
-			this.ctx.showWarning("Wait for the current response to finish or abort it before creating a worktree.");
+			this.ctx.showWarning("请等待当前回复结束或先中止，再创建 worktree。");
 			return;
 		}
 		await this.#withSessionMove(async () => {
@@ -1238,7 +1240,7 @@ export class CommandController {
 				this.ctx.ui,
 				spinner => theme.fg("accent", spinner),
 				text => theme.fg("muted", text),
-				`Creating worktree on ${branchName}…`,
+				`正在 ${branchName} 上创建 worktree…`,
 				getSymbolTheme().spinnerFrames,
 			);
 			this.ctx.statusContainer.addChild(loader);
@@ -1247,7 +1249,7 @@ export class CommandController {
 			try {
 				worktree = await createSessionWorktree(cwd, this.ctx.settings, branchName);
 			} catch (err) {
-				this.ctx.showError(`Worktree creation failed: ${err instanceof Error ? err.message : String(err)}`);
+				this.ctx.showError(`创建 worktree 失败：${err instanceof Error ? err.message : String(err)}`);
 				return false;
 			} finally {
 				loader.stop();
@@ -1262,7 +1264,7 @@ export class CommandController {
 			if (!(await this.#relocateSession(worktree.path))) return false;
 			const cleanup = await cleanSourceCheckoutIfConfigured(cwd, this.ctx.settings);
 			if (cleanup.errorMessage !== undefined) {
-				this.ctx.showWarning(`Worktree created, but cleaning source checkout failed: ${cleanup.errorMessage}`);
+				this.ctx.showWarning(`警告：worktree 已创建，但清理源检出失败：${cleanup.errorMessage}`);
 			}
 			this.ctx.present([
 				new Spacer(1),
@@ -1627,11 +1629,11 @@ export class CommandController {
 
 	async handleHandoffCommand(customInstructions?: string): Promise<void> {
 		if (this.ctx.session.isStreaming) {
-			this.ctx.showWarning("Wait for the current response to finish or abort it before handing off.");
+			this.ctx.showWarning("请等待当前回复结束或先中止，再进行交接。");
 			return;
 		}
 		if (this.ctx.session.isCompacting) {
-			this.ctx.showWarning("Wait for context compaction to finish or cancel it before handing off.");
+			this.ctx.showWarning("请等待上下文压缩结束或先取消，再进行交接。");
 			return;
 		}
 
@@ -1639,7 +1641,7 @@ export class CommandController {
 		const messageCount = entries.filter(e => e.type === "message").length;
 
 		if (messageCount < 2) {
-			this.ctx.showWarning("Nothing to hand off (no messages yet)");
+			this.ctx.showWarning("没有可交接的内容（还没有消息）");
 			return;
 		}
 

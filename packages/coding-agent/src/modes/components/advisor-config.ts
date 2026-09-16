@@ -37,7 +37,6 @@ import {
 } from "../../advisor";
 import type { ModelRegistry } from "../../config/model-registry";
 import { formatModelSelectorValue } from "../../config/model-resolver";
-import { translateUiText } from "../localization";
 import type { Settings } from "../../config/settings";
 import type { PerAdvisorStat } from "../../session/agent-session";
 import type { OAuthAccountIdentity } from "../../session/auth-storage";
@@ -114,7 +113,7 @@ function commitTools(selected: ReadonlySet<string>, all: readonly string[]): str
 }
 
 function formatAdvisorTools(tools: readonly string[] | undefined, emptyLabel: string): string {
-	if (tools === undefined) return "read, grep, glob (default)";
+	if (tools === undefined) return "read、grep、glob（默认）";
 	return tools.length > 0 ? tools.join(", ") : emptyLabel;
 }
 
@@ -191,7 +190,7 @@ export class AdvisorConfigOverlayComponent implements Component {
 	render(width: number): readonly string[] {
 		const height = Math.max(14, process.stdout.rows || 40);
 		const bodyRows = Math.max(3, height - 4);
-		const title = `Advisor configuration · ${this.#scope}${this.#dirty ? "  ● unsaved" : ""}`;
+		const title = `顾问配置 · ${this.#scope}${this.#dirty ? "  ● 未保存" : ""}`;
 		const out: string[] = [];
 
 		if (this.#screen === "list") {
@@ -262,8 +261,8 @@ export class AdvisorConfigOverlayComponent implements Component {
 		if (lines.length > rows) {
 			const marker =
 				start + rows < lines.length
-					? theme.fg("dim", `  ↓ ${lines.length - rows - start} more`)
-					: theme.fg("dim", "  (end)");
+					? theme.fg("dim", `  ↓ 还有 ${lines.length - rows - start} 行`)
+					: theme.fg("dim", "  （末尾）");
 			window[rows - 1] = marker;
 		}
 		return window;
@@ -275,7 +274,7 @@ export class AdvisorConfigOverlayComponent implements Component {
 		// until a successful save rewrites the file without them.
 		const warnings = this.#doc.warnings?.length
 			? [
-					theme.fg("warning", "⚠ Config problems — dropped while loading:"),
+					theme.fg("warning", "⚠ 配置问题——加载时已丢弃："),
 					...sanitizeDisplayWarnings(this.#doc.warnings).flatMap(warning =>
 						wrap(warning, bodyWidth).map(line => theme.fg("warning", line)),
 					),
@@ -312,7 +311,7 @@ export class AdvisorConfigOverlayComponent implements Component {
 		const model = advisor.model?.trim() || this.#defaultModelLabel || "顾问角色默认模型";
 		const tools = formatAdvisorTools(advisor.tools, "无工具");
 		const lines = [
-			theme.bold(advisor.name || "(unnamed)"),
+			theme.bold(advisor.name || "（未命名）"),
 			"",
 			`${theme.fg("dim", "已启用：")} ${advisor.enabled === false ? "○ 关闭" : "● 开启"}`,
 			`${theme.fg("dim", "模型：")} ${model}`,
@@ -430,7 +429,7 @@ export class AdvisorConfigOverlayComponent implements Component {
 		}
 		if (value === "scope") {
 			if (this.#dirty) {
-				this.#cb.notify('Unsaved changes — "Save & apply" or Close before switching scope.');
+				this.#cb.notify("有未保存的更改——请先“保存并应用”或关闭，再切换范围。");
 				return;
 			}
 			const next = this.#otherScope();
@@ -633,18 +632,14 @@ export class AdvisorConfigOverlayComponent implements Component {
 			this.#dirty = true;
 			this.#showDetail(index);
 		};
-		this.#setScreen(
-			"tools",
-			list,
-			"回车/点击勾选 · 选“完成”或按 Esc 生效（留空 = 无工具；read/grep/glob = 默认）",
-		);
+		this.#setScreen("tools", list, "回车/点击勾选 · 选“完成”或按 Esc 生效（留空 = 无工具；read/grep/glob = 默认）");
 	}
 
 	/** `index === -1` edits the shared top-level instructions; otherwise advisor[index]. */
 	#showInstructionsEditor(index: number): void {
 		const shared = index < 0;
 		const current = shared ? this.#doc.instructions : this.#doc.advisors[index].instructions;
-		const title = shared ? "Shared advisor instructions" : `Instructions — ${this.#doc.advisors[index].name}`;
+		const title = shared ? "共享顾问指令" : `指令 — ${this.#doc.advisors[index].name}`;
 		const editor = new HookEditorComponent(
 			this.#tui,
 			title,

@@ -101,20 +101,19 @@ export class BtwController {
 	}
 
 	#branchUnavailableReason(): string | undefined {
-		if (this.#branchInFlight) return "a branch is already in progress";
-		if (this.#transitionCount > 0) return "a session operation is in progress";
-		if (!this.#visible || this.#activeRequest?.component.isBranchable() !== true) return "the answer is not ready";
+		if (this.#branchInFlight) return "已有分支操作正在进行";
+		if (this.#transitionCount > 0) return "会话操作正在进行";
+		if (!this.#visible || this.#activeRequest?.component.isBranchable() !== true) return "回答尚未就绪";
 		// Inline branch promotion carries one pair; do not drop earlier side turns.
-		if (this.#activeRequest.history?.length) return "multi-turn side conversations remain in BTW history";
-		if (!this.#lastQuestion || !this.#lastReplyText || !this.#lastAssistantMessage)
-			return "the answer is unavailable";
-		if (!this.#lastLeafId) return "the session has no branch point";
+		if (this.#activeRequest.history?.length) return "BTW 历史中还有多轮旁支对话";
+		if (!this.#lastQuestion || !this.#lastReplyText || !this.#lastAssistantMessage) return "回答不可用";
+		if (!this.#lastLeafId) return "会话没有分支点";
 		if (
 			this.#lastSessionId !== this.ctx.sessionManager.getSessionId() ||
 			this.#lastLeafId !== this.ctx.sessionManager.getLeafId()
 		)
-			return "the session changed since /btw started";
-		if (this.ctx.session.isStreaming) return "a turn is still running";
+			return "自 /btw 启动后会话已发生变化";
+		if (this.ctx.session.isStreaming) return "仍有一轮正在运行";
 		return undefined;
 	}
 
@@ -135,7 +134,7 @@ export class BtwController {
 		const inlineRequest = options?.historyRecordId === undefined ? this.#activeRequest : undefined;
 		try {
 			await copyToClipboard(replaceTabs(answer).trim());
-			this.ctx.showStatus("Copied /btw answer to clipboard");
+			this.ctx.showStatus("已把 /btw 回答复制到剪贴板");
 			if (options?.historyRecordId !== undefined) this.#historyPanel?.markCopied(options.historyRecordId, answer);
 			else if (inlineRequest && this.#visible && this.#activeRequest === inlineRequest)
 				inlineRequest.component.markCopied();
@@ -156,7 +155,7 @@ export class BtwController {
 	async handleBranch(): Promise<boolean> {
 		const unavailableReason = this.#branchUnavailableReason();
 		if (unavailableReason) {
-			this.ctx.showStatus(`/btw branch unavailable: ${unavailableReason}`, { dim: true });
+			this.ctx.showStatus(`/btw 分支不可用：${unavailableReason}`, { dim: true });
 			return false;
 		}
 		const request = this.#activeRequest;
@@ -172,7 +171,7 @@ export class BtwController {
 			await this.ctx.handleBtwBranch(question, assistantMessage, leafId, sessionId);
 			return true;
 		} catch (error) {
-			this.ctx.showError(sanitizeErrorLine(`Cannot branch /btw: ${toError(error).message}`));
+			this.ctx.showError(sanitizeErrorLine(`无法为 /btw 创建分支：${toError(error).message}`));
 			return false;
 		} finally {
 			this.#branchInFlight = false;
@@ -182,7 +181,7 @@ export class BtwController {
 
 	handleEscape(): boolean {
 		if (this.#branchInFlight) {
-			this.ctx.showStatus("/btw branch is in progress", { dim: true });
+			this.ctx.showStatus("/btw 分支操作正在进行", { dim: true });
 			return true;
 		}
 		if (!this.#visible) return false;
@@ -261,7 +260,7 @@ export class BtwController {
 		if (failure) {
 			throw new Error(
 				sanitizeErrorLine(
-					`BTW history could not be saved: ${sanitizeErrorLine(failure)}. The session operation was stopped; retry after fixing storage. Unsaved answers remain in /btw.`,
+					`无法保存 BTW 历史：${sanitizeErrorLine(failure)}。会话操作已停止；请修复存储后重试。未保存的回答仍保留在 /btw 中。`,
 					TRUNCATE_LENGTHS.RECAP,
 				),
 				{ cause: failure },
@@ -276,7 +275,7 @@ export class BtwController {
 			this.#transitionCount > 0 ||
 			(this.#activeRequest && getBtwLatestTurn(this.#activeRequest.record).status === "running")
 		) {
-			this.ctx.showStatus("Wait for the current /btw answer to finish or cancel it before moving.", { dim: true });
+			this.ctx.showStatus("请等待当前 /btw 回答结束或先取消，再进行移动。", { dim: true });
 			return false;
 		}
 		this.#transitionCount++;
@@ -332,7 +331,7 @@ export class BtwController {
 		if (signal?.aborted) return false;
 		const trimmedQuestion = question.trim();
 		if (this.#starting || this.#branchInFlight || this.#transitionCount > 0) {
-			this.ctx.showStatus("A /btw action is in progress. Please wait.", { dim: true });
+			this.ctx.showStatus("/btw 操作正在进行，请稍候。", { dim: true });
 			return false;
 		}
 		if (
@@ -341,7 +340,7 @@ export class BtwController {
 			getBtwLatestTurn(this.#activeRequest.record).status === "running" &&
 			this.#activeRequest.sessionId === this.ctx.sessionManager.getSessionId()
 		) {
-			this.ctx.showStatus("A /btw question is still running. Open /btw to view it or cancel it first.", {
+			this.ctx.showStatus("/btw 问题仍在运行。打开 /btw 查看，或先取消它。", {
 				dim: true,
 			});
 			return false;
@@ -368,12 +367,12 @@ export class BtwController {
 				return false;
 			const previous = recordId ? store.getRecords().find(record => record.id === recordId) : undefined;
 			if (recordId && (!previous || getBtwLatestTurn(previous).status === "running")) {
-				this.ctx.showStatus("This side conversation is unavailable or still running.", { dim: true });
+				this.ctx.showStatus("该旁支对话不可用或仍在运行。", { dim: true });
 				return false;
 			}
 			const session = this.ctx.session;
 			if (!session.model) {
-				this.ctx.showError("No active model available for /btw.");
+				this.ctx.showError("没有可用于 /btw 的活动模型。");
 				return false;
 			}
 			await this.ctx.sessionManager.ensureOnDisk();
@@ -449,7 +448,7 @@ export class BtwController {
 			void this.#runRequest(request);
 			return true;
 		} catch (error) {
-			this.ctx.showError(sanitizeErrorLine(`Cannot open /btw history: ${toError(error).message}`));
+			this.ctx.showError(sanitizeErrorLine(`无法打开 /btw 历史：${toError(error).message}`));
 			return false;
 		} finally {
 			this.#starting = false;
@@ -544,7 +543,7 @@ export class BtwController {
 				if (request.persisted) this.#failedWrites.set(request, toError(error));
 				logger.error("BTW history save failed", { error });
 				if (request.sessionId === this.ctx.sessionManager.getSessionId()) {
-					this.ctx.showError(sanitizeErrorLine(`Could not save /btw history: ${toError(error).message}`));
+					this.ctx.showError(sanitizeErrorLine(`无法保存 /btw 历史：${toError(error).message}`));
 				}
 				return false;
 			},

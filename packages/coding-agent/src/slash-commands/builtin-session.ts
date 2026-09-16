@@ -474,7 +474,7 @@ export const BUILTIN_SESSION_SLASH_COMMANDS: ReadonlyArray<SlashCommandSpec> = [
 	{
 		name: "hub",
 		icon: "agents",
-		description: "Open the live Agent Hub",
+		description: "打开实时 Agent Hub",
 		handleTui: (_command, runtime) => {
 			runtime.ctx.showAgentHub({ initialSection: "activity" });
 			runtime.ctx.editor.setText("");

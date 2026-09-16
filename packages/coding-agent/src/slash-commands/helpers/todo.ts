@@ -101,32 +101,32 @@ function commitTodos(runtime: SlashCommandRuntime, phases: TodoPhase[]): void {
 }
 
 const TODO_HELP_TEXT = [
-	"Usage: /todo <verb> [args]",
-	"  /todo                              Show current todos",
-	"  /todo edit                         (TUI only) open in $EDITOR",
-	"  /todo copy                         Print todos as Markdown",
-	"  /todo expand                       (TUI only) expand the sticky HUD",
-	"  /todo collapse                     (TUI only) collapse the sticky HUD",
-	"  /todo export [<path>]              Write todos to file (default: TODO.md)",
-	"  /todo import [<path>]              Replace todos from file (default: TODO.md)",
-	"  /todo append [<phase>] <task...>   Append a task",
-	"  /todo start  <task>                Mark task in_progress (fuzzy match)",
-	"  /todo done   [<task|phase>]        Mark task/phase/all completed",
-	"  /todo drop   [<task|phase>]        Mark task/phase/all abandoned",
-	"  /todo rm     [<task|phase>]        Remove task/phase/all",
+	"用法：/todo <verb> [args]",
+	"  /todo                              显示当前待办",
+	"  /todo edit                         （仅 TUI）在 $EDITOR 中打开",
+	"  /todo copy                         以 Markdown 打印待办",
+	"  /todo expand                       （仅 TUI）展开常驻 HUD",
+	"  /todo collapse                     （仅 TUI）收起常驻 HUD",
+	"  /todo export [<path>]              把待办写入文件（默认：TODO.md）",
+	"  /todo import [<path>]              用文件内容替换待办（默认：TODO.md）",
+	"  /todo append [<phase>] <task...>   追加一个任务",
+	"  /todo start  <task>                把任务标记为 in_progress（模糊匹配）",
+	"  /todo done   [<task|phase>]        把任务/阶段/全部标记为已完成",
+	"  /todo drop   [<task|phase>]        把任务/阶段/全部标记为已放弃",
+	"  /todo rm     [<task|phase>]        移除任务/阶段/全部",
 ].join("\n");
 
 async function handleTodoCopyCommand(runtime: SlashCommandRuntime): Promise<SlashCommandResult> {
 	const phases = currentPhases(runtime);
 	const markdown = phases.length === 0 ? "" : phasesToMarkdown(phases).trimEnd();
-	await runtime.output(`Copy not available in ACP mode; printing instead:\n\n${markdown || "No todos."}`);
+	await runtime.output(`ACP 模式下不支持复制，改为直接输出：\n\n${markdown || "暂无待办。"}`);
 	return commandConsumed();
 }
 
 async function handleTodoExportCommand(restArgs: string, runtime: SlashCommandRuntime): Promise<SlashCommandResult> {
 	const phases = currentPhases(runtime);
 	if (phases.length === 0) {
-		await runtime.output("No todos to export.");
+		await runtime.output("没有可导出的待办。");
 		return commandConsumed();
 	}
 	let target: string;
@@ -134,9 +134,9 @@ async function handleTodoExportCommand(restArgs: string, runtime: SlashCommandRu
 		target = resolveTodoMarkdownPath(restArgs, runtime.sessionManager.getCwd());
 		await Bun.write(target, phasesToMarkdown(phases));
 	} catch (err) {
-		return usage(`Failed to write todos: ${errorMessage(err)}`, runtime);
+		return usage(`写入待办失败：${errorMessage(err)}`, runtime);
 	}
-	await runtime.output(`Wrote todos to ${target}`);
+	await runtime.output(`待办已写入 ${target}`);
 	return commandConsumed();
 }
 
@@ -147,19 +147,19 @@ async function handleTodoImportCommand(restArgs: string, runtime: SlashCommandRu
 		target = resolveTodoMarkdownPath(restArgs, runtime.sessionManager.getCwd());
 		content = await Bun.file(target).text();
 	} catch (err) {
-		return usage(`Failed to read todos: ${errorMessage(err)}`, runtime);
+		return usage(`读取待办失败：${errorMessage(err)}`, runtime);
 	}
 	const { phases, errors } = markdownToPhases(content);
-	if (errors.length > 0) return usage(`Could not parse ${target}:\n  ${errors.join("\n  ")}`, runtime);
+	if (errors.length > 0) return usage(`无法解析 ${target}：\n  ${errors.join("\n  ")}`, runtime);
 	commitTodos(runtime, phases);
 	const taskCount = phases.reduce((sum, phase) => sum + phase.tasks.length, 0);
-	await runtime.output(`Imported ${phases.length} phase(s), ${taskCount} task(s) from ${target}.`);
+	await runtime.output(`已从 ${target} 导入 ${phases.length} 个阶段、${taskCount} 个任务。`);
 	return commandConsumed();
 }
 
 async function handleTodoAppendCommand(restArgs: string, runtime: SlashCommandRuntime): Promise<SlashCommandResult> {
 	const tokens = tokenize(restArgs);
-	if (tokens.length === 0) return usage("Usage: /todo append [<phase>] <task...>", runtime);
+	if (tokens.length === 0) return usage("用法：/todo append [<phase>] <task...>", runtime);
 
 	const current = currentPhases(runtime);
 	const phaseName = tokens.length === 1 ? undefined : tokens[0];
@@ -181,19 +181,19 @@ async function handleTodoAppendCommand(restArgs: string, runtime: SlashCommandRu
 	const finalContent = titleCaseSentence(content);
 	targetPhase.tasks.push({ content: finalContent, status: "pending" });
 	commitTodos(runtime, next);
-	await runtime.output(`Appended to ${targetPhase.name}: ${finalContent}`);
+	await runtime.output(`已追加到 ${targetPhase.name}：${finalContent}`);
 	return commandConsumed();
 }
 
 async function handleTodoStartCommand(restArgs: string, runtime: SlashCommandRuntime): Promise<SlashCommandResult> {
-	if (!restArgs) return usage("Usage: /todo start <task>", runtime);
+	if (!restArgs) return usage("用法：/todo start <task>", runtime);
 	const current = currentPhases(runtime);
 	const query = tokenize(restArgs).join(" ") || restArgs;
 	const hit = findTaskFuzzy(current, query);
-	if (!hit) return usage(`No task matched "${restArgs}". Use /todo to list current tasks.`, runtime);
+	if (!hit) return usage(`没有匹配 "${restArgs}" 的任务。用 /todo 查看当前任务。`, runtime);
 	const { phases } = applyOpsToPhases(current, [{ op: "start", task: hit.task.content }]);
 	commitTodos(runtime, phases);
-	await runtime.output(`Started: ${hit.task.content}`);
+	await runtime.output(`已开始：${hit.task.content}`);
 	return commandConsumed();
 }
 
@@ -207,12 +207,12 @@ async function handleTodoMutationCommand(
 	if (!trimmedArg) {
 		if (verb === "rm") {
 			commitTodos(runtime, []);
-			await runtime.output("Cleared all todos.");
+			await runtime.output("已清空所有待办。");
 			return commandConsumed();
 		}
 		const { phases } = applyOpsToPhases(current, [{ op: verb }]);
 		commitTodos(runtime, phases);
-		await runtime.output(verb === "done" ? "Marked all tasks completed." : "Marked all tasks abandoned.");
+		await runtime.output(verb === "done" ? "已将全部任务标记为完成。" : "已将全部任务标记为放弃。");
 		return commandConsumed();
 	}
 
@@ -220,7 +220,7 @@ async function handleTodoMutationCommand(
 	if (taskHit) {
 		const { phases } = applyOpsToPhases(current, [{ op: verb, task: taskHit.task.content }]);
 		commitTodos(runtime, phases);
-		const label = verb === "done" ? "Marked completed" : verb === "drop" ? "Marked abandoned" : "Removed";
+		const label = verb === "done" ? "已标记完成" : verb === "drop" ? "已标记放弃" : "已移除";
 		await runtime.output(`${label}: ${taskHit.task.content}`);
 		return commandConsumed();
 	}
@@ -231,15 +231,15 @@ async function handleTodoMutationCommand(
 		commitTodos(runtime, phases);
 		const message =
 			verb === "done"
-				? `Marked phase ${phaseHit.name} completed.`
+				? `已将阶段 ${phaseHit.name} 标记为完成。`
 				: verb === "drop"
-					? `Marked phase ${phaseHit.name} abandoned.`
-					: `Removed phase: ${phaseHit.name}`;
+					? `已将阶段 ${phaseHit.name} 标记为放弃。`
+					: `已移除阶段：${phaseHit.name}`;
 		await runtime.output(message);
 		return commandConsumed();
 	}
 
-	return usage(`No task or phase matched "${trimmedArg}".`, runtime);
+	return usage(`没有匹配 "${trimmedArg}" 的任务或阶段。`, runtime);
 }
 
 /** ACP/text-mode `/todo` handler. Shared by both dispatchers via the spec. */
@@ -251,7 +251,7 @@ export async function handleTodoAcp(
 	if (!trimmed) {
 		const phases = currentPhases(runtime);
 		await runtime.output(
-			phases.length === 0 ? "No todos. Use /todo append <task> to start one." : phasesToMarkdown(phases).trimEnd(),
+			phases.length === 0 ? "暂无待办。用 /todo append <task> 添加一个。" : phasesToMarkdown(phases).trimEnd(),
 		);
 		return commandConsumed();
 	}
@@ -273,18 +273,15 @@ export async function handleTodoAcp(
 		case "rm":
 			return await handleTodoMutationCommand(verb, rest, runtime);
 		case "edit":
-			return usage(
-				"/todo edit requires the TUI editor; use /todo export then /todo import for non-interactive edits.",
-				runtime,
-			);
+			return usage("/todo edit 需要 TUI 编辑器；非交互式编辑请先用 /todo export 再用 /todo import。", runtime);
 		case "expand":
 		case "collapse":
-			return usage(`/todo ${verb} controls the interactive HUD and is unavailable in this mode.`, runtime);
+			return usage(`/todo ${verb} 控制交互式 HUD，在当前模式下不可用。`, runtime);
 		case "help":
 		case "?":
 			await runtime.output(TODO_HELP_TEXT);
 			return commandConsumed();
 		default:
-			return usage("Unknown /todo subcommand. Use append, start, done, drop, rm, copy, export, import.", runtime);
+			return usage("未知的 /todo 子命令。可用：append、start、done、drop、rm、copy、export、import。", runtime);
 	}
 }

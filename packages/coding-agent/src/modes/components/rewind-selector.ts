@@ -397,14 +397,12 @@ export class RewindSelectorComponent implements Component {
 
 		const output: string[] = [];
 		output.push(...this.#border.render(width));
-		output.push(
-			` ${theme.icon.rewind} ${theme.bold("Rewind")}${theme.sep.dot}${theme.fg("dim", "pick the point to continue from")}`,
-		);
+		output.push(` ${theme.icon.rewind} ${theme.bold("回退")}${theme.sep.dot}${theme.fg("dim", "选择要继续的起点")}`);
 		output.push(...this.#border.render(width));
 		output.push(...this.#scrollView.render(width));
 		const position = this.#targets.length > 0 ? `${this.#selected + 1}/${this.#targets.length}  ` : "";
-		const lateral = columns.length > 0 ? "←/→ branches" : "←/→ user turns";
-		output.push(` ${theme.fg("dim", `${position}↑/↓ step  ${lateral}  enter rewind  ctrl+o expand  esc cancel`)}`);
+		const lateral = columns.length > 0 ? "←/→ 分支" : "←/→ 用户回合";
+		output.push(` ${theme.fg("dim", `${position}↑/↓ 切换  ${lateral}  回车回退  ctrl+o 展开  Esc 取消`)}`);
 		output.push(...this.#border.render(width));
 		return output;
 	}
@@ -437,7 +435,7 @@ export class RewindSelectorComponent implements Component {
 				suffixTargets,
 				this.#activeVariant === 0 ? 0 : -1,
 				colWidth,
-				this.#columnHeader(0, count, "current", colWidth),
+				this.#columnHeader(0, count, "当前", colWidth),
 			),
 		];
 		for (let index = 0; index < columns.length; index++) {

@@ -117,13 +117,13 @@ function sentinelsFromFile(file: string, size: number): LocalTranscriptSentinel[
 function statusBadge(status: AgentStatus): string {
 	switch (status) {
 		case "running":
-			return theme.fg("success", "running");
+			return theme.fg("success", "运行中");
 		case "idle":
-			return theme.fg("accent", "idle");
+			return theme.fg("accent", "空闲");
 		case "parked":
-			return theme.fg("muted", "parked");
+			return theme.fg("muted", "已挂起");
 		case "aborted":
-			return theme.fg("error", "aborted");
+			return theme.fg("error", "已终止");
 	}
 }
 
@@ -598,7 +598,7 @@ export class AgentTranscriptViewer implements Component {
 	#headerLines(status: AgentStatus | undefined, kind: string | undefined, parentId: string | undefined): string[] {
 		const lines = [theme.fg("accent", `Agent Hub ${theme.sep.dot} ${this.deps.agentId}`)];
 		if (status && kind) {
-			const kindTag = theme.fg("dim", ` ${parentId ? `${kind} ${theme.sep.dot} of ${parentId}` : kind}`);
+			const kindTag = theme.fg("dim", ` ${parentId ? `${kind} ${theme.sep.dot} 属于 ${parentId}` : kind}`);
 			const modelLabel = this.#model ? theme.fg("muted", `${theme.sep.dot}${this.#model}`) : "";
 			lines.push(`${theme.bold(this.deps.agentId)} ${statusBadge(status)}${kindTag}${modelLabel}`);
 		}
@@ -610,8 +610,8 @@ export class AgentTranscriptViewer implements Component {
 		const statsLine = this.#statsLine();
 		if (statsLine) lines.push(` ${statsLine}`);
 		const hint = this.#editor
-			? `Enter:send  Esc:close  ${this.deps.expandKeys[0] ?? "ctrl+o"}:expand  empty input → j/k:scroll  g/G:top/bottom`
-			: `Esc:close  ${this.deps.expandKeys[0] ?? "ctrl+o"}:expand  j/k:scroll  g/G:top/bottom`;
+			? `Enter:发送  Esc:关闭  ${this.deps.expandKeys[0] ?? "ctrl+o"}:展开  输入为空时 → j/k:滚动  g/G:顶部/底部`
+			: `Esc:关闭  ${this.deps.expandKeys[0] ?? "ctrl+o"}:展开  j/k:滚动  g/G:顶部/底部`;
 		lines.push(` ${theme.fg("dim", hint)}`);
 		return lines;
 	}
@@ -642,10 +642,10 @@ export class AgentTranscriptViewer implements Component {
 	#placeholder(maxWidth: number): string {
 		if (this.deps.remote) {
 			if (this.#remoteError) return sanitizeErrorLine(this.#remoteError, maxWidth);
-			if (this.#remoteUnavailable) return "Transcript lives on the host — not available.";
-			return this.#hasRemoteData ? "No messages yet." : "Loading transcript from host…";
+			if (this.#remoteUnavailable) return "对话记录位于主机上 — 不可用。";
+			return this.#hasRemoteData ? "暂无消息。" : "正在从主机加载对话记录…";
 		}
-		if (!this.deps.registry.get(this.deps.agentId)?.sessionFile) return "No session file available yet.";
-		return "No messages yet.";
+		if (!this.deps.registry.get(this.deps.agentId)?.sessionFile) return "暂无可用的会话文件。";
+		return "暂无消息。";
 	}
 }

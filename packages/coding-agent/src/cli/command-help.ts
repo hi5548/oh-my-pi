@@ -15,8 +15,7 @@ export const authGatewayHelp = {
 } satisfies CommandMetadata;
 
 export const benchHelp = {
-	description:
-		"基准测试模型：比较 TTFT/预填充与解码吞吐量（含 p50/p95），覆盖聊天、预填充、生成和提示缓存负载",
+	description: "基准测试模型：比较 TTFT/预填充与解码吞吐量（含 p50/p95），覆盖聊天、预填充、生成和提示缓存负载",
 } satisfies CommandMetadata;
 
 export const browserRelayHelp = {
@@ -25,11 +24,6 @@ export const browserRelayHelp = {
 
 export const cleanseHelp = {
 	description: "使用加权并行子代理检测并修复项目诊断问题",
-} satisfies CommandMetadata;
-
-export const collabHelp = {
-	description:
-		"列出本机正在运行的协作主机元数据（不含 URL）；用 collab link <instanceId|pid> 获取控制链接（--view 为只读）",
 } satisfies CommandMetadata;
 
 export const collabHelp = {
@@ -61,8 +55,7 @@ export const galleryHelp = {
 
 export const gcHelp = { description: "运行存储垃圾回收" } satisfies CommandMetadata;
 export const ifBenchHelp = {
-	description:
-		"基准测试指令遵循和工作记忆：使用一条缓存的字形数组操作线程和不断变化的猫叫指令",
+	description: "基准测试指令遵循和工作记忆：使用一条缓存的字形数组操作线程和不断变化的猫叫指令",
 } satisfies CommandMetadata;
 export const gitHelp = {
 	description: "交互式全屏 Git 界面：分栏差异查看器、暂存侧栏和提交编辑器",

@@ -124,7 +124,7 @@ export function modelBadge(ref: AgentRef, observed: ObservableSession | undefine
 export function formatMetricDuration(metrics: AgentMetrics): string | undefined {
 	const durationMs = metricNumber(metrics.durationMs);
 	if (durationMs <= 0) return undefined;
-	const label = metrics.durationKind === "active" ? "active" : metrics.durationKind === "span" ? "span" : "duration";
+	const label = metrics.durationKind === "active" ? "活跃" : metrics.durationKind === "span" ? "跨度" : "耗时";
 	return `${formatDuration(durationMs)} ${label}`;
 }
 
@@ -138,9 +138,9 @@ export function formatCost(cost: number): string {
 export function formatMetrics(metrics: AgentMetrics): string {
 	return [
 		formatCost(metrics.cost),
-		formatMetricDuration(metrics) ?? "time —",
-		`${formatNumber(metrics.requests)} req`,
-		`${formatNumber(metrics.tools)} tools`,
+		formatMetricDuration(metrics) ?? "耗时 —",
+		`${formatNumber(metrics.requests)} 请求`,
+		`${formatNumber(metrics.tools)} 工具`,
 		`${formatNumber(metrics.tokens)} tok`,
 	].join(theme.sep.dot);
 }
@@ -153,8 +153,8 @@ export function formatMetricColumns(metrics: AgentMetrics, age: string): string 
 	return [
 		cost + padding(8 - visibleWidth(cost)),
 		alignRightCell(formatMetricDuration(metrics) ?? "—", 13),
-		alignRightCell(`${formatNumber(metrics.requests)} req`, 8),
-		alignRightCell(`${formatNumber(metrics.tools)} tools`, 9),
+		alignRightCell(`${formatNumber(metrics.requests)} 请求`, 8),
+		alignRightCell(`${formatNumber(metrics.tools)} 工具`, 9),
 		alignRightCell(`${formatNumber(metrics.tokens)} tok`, 8),
 		alignRightCell(age, 8),
 	].join(" ");

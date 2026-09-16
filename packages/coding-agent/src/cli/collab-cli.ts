@@ -55,11 +55,11 @@ export async function runCollabListCommand(
 	}
 
 	if (hosts.length === 0) {
-		print(chalk.dim("No active Collab hosts."));
+		print(chalk.dim("没有正在运行的 Collab 主机。"));
 		return;
 	}
 
-	print(chalk.green(`${hosts.length} active Collab ${hosts.length === 1 ? "host" : "hosts"}`));
+	print(chalk.green(`${hosts.length} 个运行中的 Collab ${hosts.length === 1 ? "主机" : "主机"}`));
 	for (const host of hosts) {
 		// Session names and POSIX paths come from other processes and may carry
 		// tabs, newlines, or escape bytes; keep each on one clean line.
@@ -71,18 +71,18 @@ export async function runCollabListCommand(
 		const details = [
 			`pid ${host.pid}`,
 			`gen ${host.generation}`,
-			host.model ? sanitizeDisplayLine(`${host.model.provider}/${host.model.id}`) : "no model",
-			`started ${formatAge(Math.round((Date.now() - host.startedAt) / 1000)) || "just now"}`,
-			`${guests} ${guests === 1 ? "guest" : "guests"}`,
+			host.model ? sanitizeDisplayLine(`${host.model.provider}/${host.model.id}`) : "无模型",
+			`启动于 ${formatAge(Math.round((Date.now() - host.startedAt) / 1000)) || "刚刚"}`,
+			`${guests} 位访客`,
 			host.access,
-			`relay ${host.relayConnected ? "connected" : "reconnecting"}`,
+			`中继${host.relayConnected ? "已连接" : "重连中"}`,
 		];
-		if (host.inputRequired) details.push("input required");
+		if (host.inputRequired) details.push("需要输入");
 		print("");
 		print(`${host.instanceId}  ${session}  ${chalk.dim(cwd)}`);
 		print(`  ${chalk.dim(details.join(" · "))}`);
 	}
-	print(chalk.dim("Get a link: omp collab link <instanceId|pid> [--view]"));
+	print(chalk.dim("获取链接：omp collab link <instanceId|pid> [--view]"));
 }
 
 export async function runCollabLinkCommand(

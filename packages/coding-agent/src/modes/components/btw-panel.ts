@@ -87,7 +87,7 @@ export class BtwPanelComponent extends OverlayPanel {
 
 	#setCopied(copied: boolean): void {
 		this.#copied = copied;
-		this.title = copied ? `${this.#baseTitle} ✓ Copied` : this.#baseTitle;
+		this.title = copied ? `${this.#baseTitle} ✓ 已复制` : this.#baseTitle;
 	}
 
 	/** Shows that the completed answer is being promoted into the chat session. */
@@ -147,35 +147,34 @@ export class BtwPanelComponent extends OverlayPanel {
 	#footerLine(): string {
 		switch (this.#state) {
 			case "running":
-				return theme.fg("muted", "Esc to cancel");
+				return theme.fg("muted", "按 Esc 取消");
 			case "complete": {
 				const actions: string[] = [];
-				if (this.isCopyable()) actions.push(this.#copied ? "c to copy again" : "c to copy");
-				if (this.#canFollowUp?.()) actions.push("f to follow up");
-				if (this.#canBranch?.() ?? this.isBranchable()) actions.push("b to branch");
-				actions.push("Esc to close");
+				if (this.isCopyable()) actions.push(this.#copied ? "按 c 再次复制" : "按 c 复制");
+				if (this.#canFollowUp?.()) actions.push("按 f 追问");
+				if (this.#canBranch?.() ?? this.isBranchable()) actions.push("按 b 分支");
+				actions.push("按 Esc 关闭");
 				if (this.#copied) {
-					return `${theme.fg("success", "✓ Copied to clipboard")}${theme.fg("muted", actions.length > 0 ? ` · ${actions.join(" · ")}` : "")}`;
+					return `${theme.fg("success", "✓ 已复制到剪贴板")}${theme.fg("muted", actions.length > 0 ? ` · ${actions.join(" · ")}` : "")}`;
 				}
 				return theme.fg("muted", actions.join(" · "));
 			}
 			case "branching":
-				return theme.fg("muted", `${theme.status.pending} Branching to chat…`);
+				return theme.fg("muted", `${theme.status.pending} 正在分支到对话…`);
 			case "aborted":
-				return theme.fg("warning", `${theme.status.warning} Cancelled · Esc to close`);
+				return theme.fg("warning", `${theme.status.warning} 已取消 · 按 Esc 关闭`);
 			case "error":
-				return theme.fg("error", `${theme.status.error} Error · Esc to close`);
+				return theme.fg("error", `${theme.status.error} 错误 · 按 Esc 关闭`);
 		}
 	}
 
 	#contentComponent(): Component {
 		if (this.#state === "error") {
-			return new Text(theme.fg("error", sanitizeErrorLine(this.#errorMessage ?? "Unknown error")), 0, 0);
+			return new Text(theme.fg("error", sanitizeErrorLine(this.#errorMessage ?? "未知错误")), 0, 0);
 		}
 		const text = this.#visibleAnswer;
 		if (!text) {
-			const waiting =
-				this.#state === "running" ? `${theme.status.pending} Waiting for response…` : "No text returned.";
+			const waiting = this.#state === "running" ? `${theme.status.pending} 等待响应…` : "未返回文本。";
 			return new Text(theme.fg("dim", waiting), 0, 0);
 		}
 		return new Markdown(text, 0, 0, getMarkdownTheme());

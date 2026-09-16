@@ -385,14 +385,14 @@ export class UsageDashboardComponent implements Component {
 	#renderCardLines(card: ProviderCard, width: number): string[] {
 		const lines: string[] = [];
 		const cardStatus = card.unlimited ? "ok" : aggregateRowStatus(card.windows);
-		const accountsText = card.accounts > 1 ? theme.fg("dim", `${card.accounts} accts`) : "";
+		const accountsText = card.accounts > 1 ? theme.fg("dim", `${card.accounts} 个账户`) : "";
 		const titleBudget = width - 2 - visibleWidth(accountsText) - (accountsText ? 1 : 0);
 		const title = theme.bold(truncateToWidth(card.name, Math.max(4, titleBudget)));
 		const titlePad = Math.max(0, width - 2 - visibleWidth(title) - visibleWidth(accountsText));
 		lines.push(`${this.#statusIcon(cardStatus)} ${title}${" ".repeat(titlePad)}${accountsText}`);
 
 		if (card.unlimited) {
-			lines.push(`  ${theme.fg("dim", "no limits")}`);
+			lines.push(`  ${theme.fg("dim", "无限制")}`);
 			return lines;
 		}
 
@@ -417,7 +417,7 @@ export class UsageDashboardComponent implements Component {
 				? `${theme.fg("muted", basePlain)} ${theme.fg("dim", tagPlain)}`
 				: theme.fg("muted", basePlain);
 			if (window.fraction === undefined) {
-				const text = theme.fg("dim", window.usedText ?? "no data");
+				const text = theme.fg("dim", window.usedText ?? "无数据");
 				lines.push(truncateToWidth(`  ${label} ${text}`, width));
 				continue;
 			}
@@ -427,12 +427,12 @@ export class UsageDashboardComponent implements Component {
 			const resetText = resetWidth > 0 ? ` ${theme.fg("dim", resetPlain.padStart(resetWidth))}` : "";
 			lines.push(`  ${label} ${this.#miniBar(window.fraction, window.status, barWidth)}${pctText}${resetText}`);
 		}
-		if (hidden > 0) lines.push(`  ${theme.fg("dim", `+${hidden} more`)}`);
+		if (hidden > 0) lines.push(`  ${theme.fg("dim", `还有 ${hidden} 个`)}`);
 		return lines;
 	}
 
 	#renderCardsGrid(innerWidth: number): string[] {
-		if (this.#cards.length === 0) return [theme.fg("dim", "No usage data available.")];
+		if (this.#cards.length === 0) return [theme.fg("dim", "暂无用量数据。")];
 		const active = this.#cards.filter(card => !card.idle);
 		const idle = this.#cards.filter(card => card.idle);
 		const columns = Math.max(1, Math.floor((innerWidth + CARD_GUTTER) / (CARD_MIN_WIDTH + CARD_GUTTER)));
@@ -456,7 +456,7 @@ export class UsageDashboardComponent implements Component {
 			if (active.length > 0) lines.push("");
 			const names = idle.map(card => card.name).join(" · ");
 			const prefix = `${theme.fg("success", theme.status.success)} `;
-			lines.push(truncateToWidth(`${prefix}${theme.fg("dim", `untouched: ${names}`)}`, innerWidth));
+			lines.push(truncateToWidth(`${prefix}${theme.fg("dim", `未使用：${names}`)}`, innerWidth));
 		}
 		return lines;
 	}
@@ -490,10 +490,10 @@ export class UsageDashboardComponent implements Component {
 		const summary: string[] = [];
 		if (this.#activityError) {
 			const detail = formatActivityErrorDetail(this.#activityError);
-			return [theme.fg("dim", detail ? `Usage history unavailable (${detail}).` : "Usage history unavailable.")];
+			return [theme.fg("dim", detail ? `用量历史不可用（${detail}）。` : "用量历史不可用。")];
 		}
 		const points = this.#activity;
-		if (!points) return [theme.fg("dim", "Loading usage history…")];
+		if (!points) return [theme.fg("dim", "正在加载用量历史…")];
 
 		const labelWidth = 2;
 		const weeks = Math.max(4, Math.min(53, Math.floor((innerWidth - labelWidth) / 2)));
@@ -509,7 +509,7 @@ export class UsageDashboardComponent implements Component {
 			layout.totalRequests,
 		);
 		summary.push(
-			`${theme.bold(theme.fg("accent", "Activity"))} ${theme.fg("dim", `${cost} · ${requests} requests · last ${weeks} weeks`)}${this.#syncing ? theme.fg("dim", " · syncing…") : ""}`,
+			`${theme.bold(theme.fg("accent", "活动"))} ${theme.fg("dim", `${cost} · ${requests} 次请求 · 最近 ${weeks} 周`)}${this.#syncing ? theme.fg("dim", " · 同步中…") : ""}`,
 		);
 		summary.push("");
 
@@ -567,8 +567,8 @@ export class UsageDashboardComponent implements Component {
 		if (this.#scroll > maxScroll) this.#scroll = maxScroll;
 
 		const latestFetchedAt = Math.max(0, ...this.#options.reports.map(report => report.fetchedAt ?? 0));
-		const checkedText = latestFetchedAt ? `checked ${formatDuration(this.#nowMs - latestFetchedAt)} ago` : "";
-		const title = this.#view === "detail" ? "Usage · Details" : "Usage";
+		const checkedText = latestFetchedAt ? `${formatDuration(this.#nowMs - latestFetchedAt)}前检查` : "";
+		const title = this.#view === "detail" ? "用量 · 详情" : "用量";
 
 		const out: string[] = [];
 		out.push(topBorder(width, title));
@@ -577,8 +577,8 @@ export class UsageDashboardComponent implements Component {
 			out.push(row(contentSource[this.#scroll + i] ?? "", width));
 		}
 		out.push(divider(width));
-		const scrollHint = maxScroll > 0 ? "↑/↓ scroll · " : "";
-		const hint = this.#view === "detail" ? `${scrollHint}Esc back` : `${scrollHint}↵ details · Esc close`;
+		const scrollHint = maxScroll > 0 ? "↑/↓ 滚动 · " : "";
+		const hint = this.#view === "detail" ? `${scrollHint}Esc 返回` : `${scrollHint}↵ 详情 · Esc 关闭`;
 		out.push(row(theme.fg("dim", hint), width));
 		out.push(bottomBorder(width));
 		return out;

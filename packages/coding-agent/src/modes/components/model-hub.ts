@@ -960,16 +960,16 @@ export class ModelHubComponent implements Component {
 			}
 		}
 		chips.push({
-			label: `fallbacks:${item.model.id}`,
-			styled: theme.fg("muted", `fallbacks:${item.model.id}`),
+			label: `备用：${item.model.id}`,
+			styled: theme.fg("muted", `备用：${item.model.id}`),
 			action: "fallbackModel",
 		});
 		chips.push({
-			label: `fallbacks:${item.model.provider}/*`,
-			styled: theme.fg("muted", `fallbacks:${item.model.provider}/*`),
+			label: `备用：${item.model.provider}/*`,
+			styled: theme.fg("muted", `备用：${item.model.provider}/*`),
 			action: "fallbackProvider",
 		});
-		chips.push({ label: "fallback", styled: theme.fg("muted", "retry-fallback"), action: "fallback" });
+		chips.push({ label: "备用", styled: theme.fg("muted", "重试备用"), action: "fallback" });
 		this.#strip = { kind: "role", item, chips, index: 0, returnToRoles: false };
 	}
 
@@ -1269,13 +1269,13 @@ export class ModelHubComponent implements Component {
 	#openFallbackKeyStrip(item: ModelBrowserItem): void {
 		const chips: StripChip[] = [
 			{
-				label: `for ${item.selector}`,
-				styled: theme.fg("muted", `for ${item.selector}`),
+				label: `适用于 ${item.selector}`,
+				styled: theme.fg("muted", `适用于 ${item.selector}`),
 				action: "fallbackModel",
 			},
 			{
-				label: `for ${item.model.provider}/*`,
-				styled: theme.fg("muted", `for ${item.model.provider}/*`),
+				label: `适用于 ${item.model.provider}/*`,
+				styled: theme.fg("muted", `适用于 ${item.model.provider}/*`),
 				action: "fallbackProvider",
 			},
 		];
@@ -1937,14 +1937,11 @@ export class ModelHubComponent implements Component {
 
 	#statusRow(width: number): string {
 		if (this.#assignmentPending) {
-			return truncateToWidth(theme.fg("accent", " Applying model…"), width);
+			return truncateToWidth(theme.fg("accent", " 正在应用模型…"), width);
 		}
 		if (this.#assigning !== null) {
 			if (this.#assigning.kind === "fallbackKey") {
-				return truncateToWidth(
-					theme.fg("accent", " 新建备用链 — 回车选择受保护的模型，Esc 取消"),
-					width,
-				);
+				return truncateToWidth(theme.fg("accent", " 新建备用链 — 回车选择受保护的模型，Esc 取消"), width);
 			}
 			const info = getRoleInfo(this.#assigning.role, this.#settings);
 			const label = translateUiText(info.tag ?? info.name ?? this.#assigning.role);
@@ -1955,13 +1952,10 @@ export class ModelHubComponent implements Component {
 					width,
 				);
 			}
-			return truncateToWidth(
-				theme.fg("accent", ` 正在为 ${theme.bold(label)} 分配 — 回车确认，Esc 取消`),
-				width,
-			);
+			return truncateToWidth(theme.fg("accent", ` 正在为 ${theme.bold(label)} 分配 — 回车确认，Esc 取消`), width);
 		}
 		const entry = this.#activeEntry();
-		const scopedSuffix = this.#scopedModels.length > 0 ? " · --models scope" : "";
+		const scopedSuffix = this.#scopedModels.length > 0 ? " · --models 范围" : "";
 		let text: string;
 		switch (entry.kind) {
 			case "recent":
@@ -2136,10 +2130,7 @@ export class ModelHubComponent implements Component {
 				);
 				lines[rows - 1] = truncateToWidth(`  ${theme.fg("dim", `${cycleKey} 循环：`)} ${track}`, width);
 			} else {
-				lines[rows - 1] = truncateToWidth(
-					theme.fg("dim", `  ${cycleKey} 循环为空 — 在角色上按 c 添加`),
-					width,
-				);
+				lines[rows - 1] = truncateToWidth(theme.fg("dim", `  ${cycleKey} 循环为空 — 在角色上按 c 添加`), width);
 			}
 		}
 		return lines;

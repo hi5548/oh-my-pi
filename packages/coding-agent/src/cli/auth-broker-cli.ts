@@ -217,15 +217,13 @@ async function runLogin(flags: AuthBrokerCommandArgs["flags"]): Promise<void> {
 	let providerArg = flags.provider;
 	if (!providerArg) {
 		if (flags.via) {
-			throw new Error(
-				"Usage: omp auth-broker login <provider> --via=user@host (provider required for remote login)",
-			);
+			throw new Error("用法：omp auth-broker login <provider> --via=user@host（远程登录必须指定 provider）");
 		}
 		providerArg = await pickProviderInteractively(providers);
 	}
 	if (!providers.some(p => p.id === providerArg)) {
 		throw new Error(
-			`Unknown OAuth provider '${providerArg}'. Known: ${providers
+			`未知 OAuth 服务商 '${providerArg}'。已知：${providers
 				.map(p => p.id)
 				.sort()
 				.join(", ")}`,
@@ -257,7 +255,7 @@ async function runLocalLogin(provider: OAuthProvider): Promise<void> {
 		const usesManualInput = PASTE_CODE_LOGIN_PROVIDERS.has(provider);
 		await storage.login(provider, {
 			onAuth({ url, launchUrl, instructions }) {
-				process.stdout.write("\nOpen this URL in your browser:\n");
+				process.stdout.write("\n在浏览器中打开此 URL：\n");
 				// Full URL first so the CLI works from any machine, including SSH
 				// sessions where a `launchUrl` (loopback `/launch` on the OMP
 				// host) would resolve against the caller's browser and fail.
@@ -267,7 +265,7 @@ async function runLocalLogin(provider: OAuthProvider): Promise<void> {
 					// Local shortcut for the machine running OMP. Terminals or
 					// screen-scrapers narrower than the full URL still get an
 					// unbroken copy target here.
-					process.stdout.write(`Local shortcut (this machine only): ${launchUrl}\n`);
+					process.stdout.write(`本机快捷链接（仅限这台机器）：${launchUrl}\n`);
 				}
 				if (instructions) process.stdout.write(`${instructions}\n`);
 				process.stdout.write("\n");
@@ -281,12 +279,12 @@ async function runLocalLogin(provider: OAuthProvider): Promise<void> {
 			...(usesManualInput
 				? {
 						onManualCodeInput(signal) {
-							return ask("Paste the authorization code (or full redirect URL):", signal);
+							return ask("粘贴授权代码（或完整重定向 URL）：", signal);
 						},
 					}
 				: undefined),
 		});
-		process.stdout.write(`\nCredentials saved to ${getAgentDbPath()}\n`);
+		process.stdout.write(`\n凭据已保存到 ${getAgentDbPath()}\n`);
 	} finally {
 		store.close();
 		rl.close();
@@ -363,19 +361,19 @@ function promptLine(rl: readline.Interface, question: string, signal?: AbortSign
 
 async function pickProviderInteractively(providers: readonly OAuthProviderInfo[]): Promise<string> {
 	if (providers.length === 0) {
-		throw new Error("No OAuth providers registered");
+		throw new Error("没有已注册的 OAuth 服务商");
 	}
 	const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 	try {
-		process.stdout.write("Select a provider:\n\n");
+		process.stdout.write("选择服务商：\n\n");
 		for (let i = 0; i < providers.length; i++) {
 			process.stdout.write(`  ${i + 1}. ${providers[i].name}\n`);
 		}
 		process.stdout.write("\n");
-		const choice = await promptLine(rl, `Enter number (1-${providers.length}): `);
+		const choice = await promptLine(rl, `输入编号（1-${providers.length}）：`);
 		const index = Number.parseInt(choice, 10) - 1;
 		if (Number.isNaN(index) || index < 0 || index >= providers.length) {
-			throw new Error(`Invalid selection: ${choice}`);
+			throw new Error(`无效选择：${choice}`);
 		}
 		return providers[index].id;
 	} finally {
@@ -386,9 +384,7 @@ async function pickProviderInteractively(providers: readonly OAuthProviderInfo[]
 async function runRemoteLogin(provider: string, via: string, dryRun: boolean): Promise<void> {
 	const port = CALLBACK_PORTS[provider];
 	if (port === undefined) {
-		throw new Error(
-			`No known OAuth callback port for '${provider}'. Use device-code flow on the broker host directly.`,
-		);
+		throw new Error(`没有 '${provider}' 的已知 OAuth 回调端口。请在 broker 主机上直接使用设备码流程。`);
 	}
 	const sshArgs = [
 		"-L",
@@ -404,7 +400,7 @@ async function runRemoteLogin(provider: string, via: string, dryRun: boolean): P
 	}
 	const sshBin = $which("ssh");
 	if (!sshBin) {
-		throw new Error("ssh binary not found in PATH");
+		throw new Error("PATH 中找不到 ssh 可执行文件");
 	}
 	const proc = Bun.spawn({
 		cmd: [sshBin, ...sshArgs],
@@ -414,7 +410,7 @@ async function runRemoteLogin(provider: string, via: string, dryRun: boolean): P
 	});
 	const exitCode = await proc.exited;
 	if (exitCode !== 0) {
-		throw new Error(`ssh exited with code ${exitCode}`);
+		throw new Error(`ssh 以退出码 ${exitCode} 结束`);
 	}
 }
 
@@ -425,13 +421,13 @@ async function runLogout(flags: AuthBrokerCommandArgs["flags"]): Promise<void> {
 		if (!providerArg) {
 			const stored = store.listProviders();
 			if (stored.length === 0) {
-				process.stdout.write("No credentials stored.\n");
+				process.stdout.write("没有已存储的凭据。\n");
 				return;
 			}
 			providerArg = await pickStoredProviderInteractively(stored);
 		}
 		store.deleteAuthCredentialsForProvider(providerArg, "logged out by user");
-		process.stdout.write(`Logged out of ${providerArg}\n`);
+		process.stdout.write(`已退出登录 ${providerArg}\n`);
 	} finally {
 		store.close();
 	}
@@ -440,15 +436,15 @@ async function runLogout(flags: AuthBrokerCommandArgs["flags"]): Promise<void> {
 async function pickStoredProviderInteractively(providers: string[]): Promise<string> {
 	const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 	try {
-		process.stdout.write("Select a provider to logout:\n\n");
+		process.stdout.write("选择要退出登录的服务商：\n\n");
 		for (let i = 0; i < providers.length; i++) {
 			process.stdout.write(`  ${i + 1}. ${providers[i]}\n`);
 		}
 		process.stdout.write("\n");
-		const choice = await promptLine(rl, `Enter number (1-${providers.length}): `);
+		const choice = await promptLine(rl, `输入编号（1-${providers.length}）：`);
 		const index = Number.parseInt(choice, 10) - 1;
 		if (Number.isNaN(index) || index < 0 || index >= providers.length) {
-			throw new Error(`Invalid selection: ${choice}`);
+			throw new Error(`无效选择：${choice}`);
 		}
 		return providers[index];
 	} finally {
@@ -462,7 +458,7 @@ async function runList(flags: AuthBrokerCommandArgs["flags"]): Promise<void> {
 		process.stdout.write(`${JSON.stringify(providers.map(p => ({ id: p.id, name: p.name })))}\n`);
 		return;
 	}
-	process.stdout.write("Available providers:\n\n");
+	process.stdout.write("可用服务商：\n\n");
 	for (const p of providers) {
 		process.stdout.write(`  ${p.id.padEnd(20)} ${p.name}\n`);
 	}
@@ -530,7 +526,7 @@ async function collectImportSources(target: string): Promise<string[]> {
 	const stat = await fs.stat(target);
 	if (stat.isFile()) return [target];
 	if (!stat.isDirectory()) {
-		throw new Error(`Import source is neither file nor directory: ${target}`);
+		throw new Error(`导入来源既不是文件也不是目录：${target}`);
 	}
 	const entries = await fs.readdir(target, { withFileTypes: true });
 	const files: string[] = [];
@@ -556,28 +552,28 @@ async function loadImportPlan(
 		try {
 			json = (await Bun.file(file).json()) as CliProxyCredentialJson;
 		} catch (err) {
-			skipped.push({ file, reason: `unreadable JSON: ${String(err)}` });
+			skipped.push({ file, reason: `无法读取的 JSON：${String(err)}` });
 			continue;
 		}
 		if (json.disabled === true && !includeDisabled) {
-			skipped.push({ file, reason: "credential marked disabled (use --include-disabled to import anyway)" });
+			skipped.push({ file, reason: "凭据已被标记为禁用（用 --include-disabled 仍可导入）" });
 			continue;
 		}
 		const provider = resolveCliProxyProvider(json, file, overrideProvider);
 		if (!provider) {
 			skipped.push({
 				file,
-				reason: `cannot determine omp provider from type=${json.type ?? "?"} (pass --provider to override)`,
+				reason: `无法从 type=${json.type ?? "?"} 判断 omp 服务商（用 --provider 覆盖）`,
 			});
 			continue;
 		}
 		if (!json.access_token || !json.refresh_token) {
-			skipped.push({ file, reason: "missing access_token or refresh_token" });
+			skipped.push({ file, reason: "缺少 access_token 或 refresh_token" });
 			continue;
 		}
 		const expiresAt = parseCliProxyExpiry(json.expired);
 		if (expiresAt === null) {
-			skipped.push({ file, reason: `cannot parse expired=${json.expired ?? "?"}` });
+			skipped.push({ file, reason: `无法解析 expired=${json.expired ?? "?"}` });
 			continue;
 		}
 		const email = typeof json.email === "string" && json.email.length > 0 ? json.email : null;
@@ -604,16 +600,16 @@ async function loadImportPlan(
 }
 
 function describeImportEntry(entry: ImportPlanEntry): string {
-	const ident = entry.email ?? entry.accountId ?? "(no identity)";
-	const stale = entry.expiresAt < Date.now() ? " [expired]" : "";
-	const disabled = entry.disabled ? " [disabled]" : "";
-	return `${entry.provider}: ${ident}${stale}${disabled} from ${entry.sourceFile}`;
+	const ident = entry.email ?? entry.accountId ?? "（无身份）";
+	const stale = entry.expiresAt < Date.now() ? " [已过期]" : "";
+	const disabled = entry.disabled ? " [已禁用]" : "";
+	return `${entry.provider}: ${ident}${stale}${disabled}，来自 ${entry.sourceFile}`;
 }
 
 async function runImport(flags: AuthBrokerCommandArgs["flags"]): Promise<void> {
 	const target = flags.source;
 	if (!target) {
-		throw new Error("Usage: omp auth-broker import <file|dir> [--provider=<id>] [--include-disabled] [--dry-run]");
+		throw new Error("用法：omp auth-broker import <file|dir> [--provider=<id>] [--include-disabled] [--dry-run]");
 	}
 	const resolvedTarget = path.resolve(target.startsWith("~") ? target.replace(/^~/, os.homedir()) : target);
 	const { entries, skipped } = await loadImportPlan(resolvedTarget, flags.provider, flags.includeDisabled === true);
@@ -640,18 +636,18 @@ async function runImport(flags: AuthBrokerCommandArgs["flags"]): Promise<void> {
 
 	if (!flags.json) {
 		for (const skip of skipped) {
-			process.stdout.write(`${chalk.yellow("skip")} ${skip.file}: ${skip.reason}\n`);
+			process.stdout.write(`${chalk.yellow("跳过")} ${skip.file}: ${skip.reason}\n`);
 		}
 	}
 
 	if (entries.length === 0) {
-		if (!flags.json) process.stdout.write(`No importable credentials in ${resolvedTarget}.\n`);
+		if (!flags.json) process.stdout.write(`没有可导入的凭据：${resolvedTarget}。\n`);
 		return;
 	}
 
 	if (flags.dryRun === true) {
 		if (!flags.json) {
-			process.stdout.write(`Dry run — would import ${entries.length} credential(s):\n`);
+			process.stdout.write(`试运行 — 将导入 ${entries.length} 条凭据：\n`);
 			for (const entry of entries) process.stdout.write(`  ${describeImportEntry(entry)}\n`);
 		}
 		return;
@@ -664,14 +660,14 @@ async function runImport(flags: AuthBrokerCommandArgs["flags"]): Promise<void> {
 			try {
 				await client.uploadCredential(entry.provider, entry.credential);
 				if (!flags.json) {
-					process.stdout.write(`${chalk.green("uploaded")} ${describeImportEntry(entry)} → ${brokerConfig.url}\n`);
+					process.stdout.write(`${chalk.green("已上传")} ${describeImportEntry(entry)} → ${brokerConfig.url}\n`);
 				}
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
 				if (flags.json) {
 					process.stdout.write(`${JSON.stringify({ error: message, file: entry.sourceFile })}\n`);
 				} else {
-					process.stdout.write(`${chalk.red("failed")} ${describeImportEntry(entry)}: ${message}\n`);
+					process.stdout.write(`${chalk.red("失败")} ${describeImportEntry(entry)}: ${message}\n`);
 				}
 				process.exitCode = 1;
 			}
@@ -683,7 +679,7 @@ async function runImport(flags: AuthBrokerCommandArgs["flags"]): Promise<void> {
 	try {
 		for (const entry of entries) {
 			store.upsertAuthCredentialForProvider(entry.provider, entry.credential);
-			if (!flags.json) process.stdout.write(`${chalk.green("imported")} ${describeImportEntry(entry)}\n`);
+			if (!flags.json) process.stdout.write(`${chalk.green("已导入")} ${describeImportEntry(entry)}\n`);
 		}
 	} finally {
 		store.close();
@@ -707,7 +703,7 @@ interface MigrateSkip {
 }
 
 function credentialIdentity(provider: string, credential: AuthCredential): string {
-	if (credential.type === "api_key") return "(api key)";
+	if (credential.type === "api_key") return "（api key）";
 	const base = credential.email ?? credential.accountId ?? credential.projectId ?? `<${provider} oauth>`;
 	return credential.orgId ? `${base} (${credential.orgName ?? credential.orgId})` : base;
 }
@@ -771,18 +767,18 @@ async function runMigrate(flags: AuthBrokerCommandArgs["flags"]): Promise<void> 
 	const brokerConfig = await resolveAuthBrokerConfig();
 	if (!brokerConfig) {
 		throw new Error(
-			"OMP_AUTH_BROKER_URL must be set (or `auth.broker.url` in config.yml). `migrate` uploads local credentials to a configured broker.",
+			"必须设置 OMP_AUTH_BROKER_URL（或 config.yml 中的 `auth.broker.url`）。`migrate` 会把本机凭据上传到已配置的 broker。",
 		);
 	}
 	if (flags.fromLocal !== true) {
 		throw new Error(
-			"`omp auth-broker migrate` requires an explicit source. Pass `--from-local` to migrate from the local SQLite store and env vars.",
+			"`omp auth-broker migrate` 需要显式指定来源。传入 `--from-local` 以从本机 SQLite 存储和环境变量迁移。",
 		);
 	}
 
 	const client = new AuthBrokerClient({ url: brokerConfig.url, token: brokerConfig.token });
 	const snapshotResult = await client.fetchSnapshot();
-	if (snapshotResult.status !== 200) throw new Error("Auth broker returned no snapshot");
+	if (snapshotResult.status !== 200) throw new Error("Auth broker 未返回快照");
 	const existing = indexBrokerSnapshot(snapshotResult.snapshot);
 
 	const plan: MigratePlanEntry[] = [];
@@ -802,8 +798,8 @@ async function runMigrate(flags: AuthBrokerCommandArgs["flags"]): Promise<void> 
 				skipped.push({
 					source: "local-sqlite",
 					provider: row.provider,
-					identity: "(api key)",
-					reason: "placeholder sentinel '<authenticated>' is not a real key",
+					identity: "（api key）",
+					reason: "占位哨兵值 '<authenticated>' 不是真实的 key",
 				});
 				continue;
 			}
@@ -813,7 +809,7 @@ async function runMigrate(flags: AuthBrokerCommandArgs["flags"]): Promise<void> 
 					source: "local-sqlite",
 					provider: row.provider,
 					identity,
-					reason: "OAuth from local SQLite skipped by default (use --include-oauth)",
+					reason: "默认跳过本机 SQLite 中的 OAuth（使用 --include-oauth）",
 				});
 				continue;
 			}
@@ -822,7 +818,7 @@ async function runMigrate(flags: AuthBrokerCommandArgs["flags"]): Promise<void> 
 					source: "local-sqlite",
 					provider: row.provider,
 					identity,
-					reason: "already on broker",
+					reason: "broker 上已存在",
 				});
 				continue;
 			}
@@ -831,7 +827,7 @@ async function runMigrate(flags: AuthBrokerCommandArgs["flags"]): Promise<void> 
 					source: "local-sqlite",
 					provider: row.provider,
 					identity,
-					reason: "another local api_key for this provider already planned",
+					reason: "该服务商的另一条本机 api_key 已在计划中",
 				});
 				continue;
 			}
@@ -853,8 +849,8 @@ async function runMigrate(flags: AuthBrokerCommandArgs["flags"]): Promise<void> 
 				skipped.push({
 					source: "env",
 					provider,
-					identity: "(api key)",
-					reason: "already on broker (provider has an api_key)",
+					identity: "（api key）",
+					reason: "broker 上已存在（该服务商已有 api_key）",
 				});
 				continue;
 			}
@@ -863,12 +859,12 @@ async function runMigrate(flags: AuthBrokerCommandArgs["flags"]): Promise<void> 
 				skipped.push({
 					source: "env",
 					provider,
-					identity: "(api key)",
-					reason: "local SQLite already supplied an api_key for this provider",
+					identity: "（api key）",
+					reason: "本机 SQLite 已为该服务商提供了 api_key",
 				});
 				continue;
 			}
-			plan.push({ source: "env", provider, credential, identity: "(api key)" });
+			plan.push({ source: "env", provider, credential, identity: "（api key）" });
 		}
 	}
 
@@ -883,19 +879,19 @@ async function runMigrate(flags: AuthBrokerCommandArgs["flags"]): Promise<void> 
 	} else {
 		for (const skip of skipped) {
 			process.stdout.write(
-				`${chalk.yellow("skip")} [${skip.source}] ${skip.provider} ${skip.identity}: ${skip.reason}\n`,
+				`${chalk.yellow("跳过")} [${skip.source}] ${skip.provider} ${skip.identity}: ${skip.reason}\n`,
 			);
 		}
 	}
 
 	if (plan.length === 0) {
-		if (!flags.json) process.stdout.write("Nothing to migrate.\n");
+		if (!flags.json) process.stdout.write("没有需要迁移的内容。\n");
 		return;
 	}
 
 	if (flags.dryRun === true) {
 		if (!flags.json) {
-			process.stdout.write(`Dry run — would upload ${plan.length} credential(s):\n`);
+			process.stdout.write(`试运行 — 将上传 ${plan.length} 条凭据：\n`);
 			for (const entry of plan) {
 				process.stdout.write(`  [${entry.source}] ${entry.provider} ${entry.identity}\n`);
 			}
@@ -907,14 +903,14 @@ async function runMigrate(flags: AuthBrokerCommandArgs["flags"]): Promise<void> 
 		try {
 			await client.uploadCredential(entry.provider, entry.credential);
 			if (!flags.json) {
-				process.stdout.write(`${chalk.green("uploaded")} [${entry.source}] ${entry.provider} ${entry.identity}\n`);
+				process.stdout.write(`${chalk.green("已上传")} [${entry.source}] ${entry.provider} ${entry.identity}\n`);
 			}
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
 			if (flags.json) {
 				process.stdout.write(`${JSON.stringify({ error: message, provider: entry.provider })}\n`);
 			} else {
-				process.stdout.write(`${chalk.red("failed")} [${entry.source}] ${entry.provider}: ${message}\n`);
+				process.stdout.write(`${chalk.red("失败")} [${entry.source}] ${entry.provider}: ${message}\n`);
 			}
 			process.exitCode = 1;
 		}
@@ -924,7 +920,7 @@ async function runMigrate(flags: AuthBrokerCommandArgs["flags"]): Promise<void> 
 async function runStatus(flags: AuthBrokerCommandArgs["flags"]): Promise<void> {
 	const cfg = await resolveAuthBrokerConfig();
 	if (!cfg) {
-		const message = "No auth-broker configured (set OMP_AUTH_BROKER_URL to enable).";
+		const message = "未配置 auth-broker（设置 OMP_AUTH_BROKER_URL 以启用）。";
 		if (flags.json) process.stdout.write(`${JSON.stringify({ ok: false, reason: "not_configured" })}\n`);
 		else process.stdout.write(`${chalk.yellow(message)}\n`);
 		return;
@@ -935,7 +931,7 @@ async function runStatus(flags: AuthBrokerCommandArgs["flags"]): Promise<void> {
 		if (flags.json) {
 			process.stdout.write(`${JSON.stringify({ url: cfg.url, ...health })}\n`);
 		} else {
-			process.stdout.write(`${chalk.green("OK")} ${cfg.url} (version=${health.version ?? "unknown"})\n`);
+			process.stdout.write(`${chalk.green("OK")} ${cfg.url} (version=${health.version ?? "未知"})\n`);
 		}
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
@@ -977,7 +973,7 @@ export async function runAuthBrokerCommand(cmd: AuthBrokerCommandArgs): Promise<
 		default: {
 			// Exhaustive check.
 			const _exhaustive: never = cmd.action;
-			throw new Error(`Unknown auth-broker action: ${String(_exhaustive)}`);
+			throw new Error(`未知的 auth-broker 操作：${String(_exhaustive)}`);
 		}
 	}
 }

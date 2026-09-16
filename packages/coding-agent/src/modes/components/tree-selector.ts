@@ -552,13 +552,13 @@ class TreeList implements Component {
 	#getFilterLabel(): string {
 		switch (this.#filterMode) {
 			case "no-tools":
-				return " [no-tools]";
+				return " [无工具]";
 			case "user-only":
-				return " [user]";
+				return " [用户]";
 			case "labeled-only":
-				return " [labeled]";
+				return " [已标记]";
 			case "all":
-				return " [all]";
+				return " [全部]";
 			default:
 				return "";
 		}
@@ -576,23 +576,23 @@ class TreeList implements Component {
 			//    `model_change` + `thinking_level_change` (both hidden by the default filter)
 			//    read as "broken /tree" — see #1909.
 			if (this.#flatNodes.length === 0) {
-				lines.push(truncateToWidth(theme.fg("muted", "No entries found"), width));
+				lines.push(truncateToWidth(theme.fg("muted", "未找到条目"), width));
 				lines.push(truncateToWidth(theme.fg("muted", `(0/0)${this.#getFilterLabel()}`), width));
 			} else if (this.#searchQuery.length > 0) {
-				lines.push(truncateToWidth(theme.fg("muted", `No entries match search "${this.#searchQuery}"`), width));
-				lines.push(truncateToWidth(theme.fg("muted", "Press Backspace to clear the search"), width));
+				lines.push(truncateToWidth(theme.fg("muted", `没有匹配“${this.#searchQuery}”的条目`), width));
+				lines.push(truncateToWidth(theme.fg("muted", "按 Backspace 清除搜索"), width));
 				lines.push(
 					truncateToWidth(theme.fg("muted", `(0/${this.#flatNodes.length})${this.#getFilterLabel()}`), width),
 				);
 			} else {
-				const filterLabel = this.#getFilterLabel().trim() || "[default]";
+				const filterLabel = this.#getFilterLabel().trim() || "[默认]";
 				lines.push(
 					truncateToWidth(
-						theme.fg("muted", `${this.#flatNodes.length} entries hidden by the current filter ${filterLabel}`),
+						theme.fg("muted", `${this.#flatNodes.length} 个条目被当前筛选条件隐藏 ${filterLabel}`),
 						width,
 					),
 				);
-				lines.push(truncateToWidth(theme.fg("muted", "Press Alt+A to show all, Alt+D for default"), width));
+				lines.push(truncateToWidth(theme.fg("muted", "按 Alt+A 显示全部，Alt+D 恢复默认"), width));
 				lines.push(
 					truncateToWidth(theme.fg("muted", `(0/${this.#flatNodes.length})${this.#getFilterLabel()}`), width),
 				);
@@ -732,28 +732,27 @@ class TreeList implements Component {
 				if (role === "user") {
 					const msgWithContent = msg as { content?: unknown };
 					const content = normalize(this.#extractContent(msgWithContent.content));
-					result = theme.fg("accent", "user: ") + content;
+					result = theme.fg("accent", "用户：") + content;
 				} else if (role === "developer") {
 					const msgWithContent = msg as { content?: unknown };
 					const content = normalize(this.#extractContent(msgWithContent.content));
-					result = theme.fg("dim", "developer: ") + theme.fg("muted", content);
+					result = theme.fg("dim", "开发者：") + theme.fg("muted", content);
 				} else if (role === "assistant") {
 					const presentation = resolveAssistantErrorPresentation(msg);
 					if (presentation.kind === "compact-recovered") {
-						result = theme.fg("success", "assistant: ") + theme.fg("dim", presentation.text);
+						result = theme.fg("success", "助手：") + theme.fg("dim", presentation.text);
 						break;
 					}
 					const msgWithContent = msg as { content?: unknown; stopReason?: string; errorMessage?: string };
 					const textContent = normalize(this.#extractContent(msgWithContent.content));
 					if (textContent) {
-						result = theme.fg("success", "assistant: ") + textContent;
+						result = theme.fg("success", "助手：") + textContent;
 					} else if (presentation.kind === "full") {
-						result =
-							theme.fg("success", "assistant: ") + theme.fg("error", normalize(presentation.text).slice(0, 80));
+						result = theme.fg("success", "助手：") + theme.fg("error", normalize(presentation.text).slice(0, 80));
 					} else if (msgWithContent.stopReason === "aborted") {
-						result = theme.fg("success", "assistant: ") + theme.fg("muted", "(aborted)");
+						result = theme.fg("success", "助手：") + theme.fg("muted", "（已中止）");
 					} else {
-						result = theme.fg("success", "assistant: ") + theme.fg("muted", "(no content)");
+						result = theme.fg("success", "助手：") + theme.fg("muted", "（无内容）");
 					}
 				} else if (role === "toolResult") {
 					const toolMsg = msg as { toolCallId?: string; toolName?: string };
@@ -774,7 +773,7 @@ class TreeList implements Component {
 			case "custom_message": {
 				if (entry.customType === "advisor") {
 					const { qualifier, text } = advisorTreeDisplay(entry.details);
-					const label = qualifier ? `advisor (${qualifier}): ` : "advisor: ";
+					const label = qualifier ? `顾问（${qualifier}）：` : "顾问：";
 					result = theme.fg("customMessageLabel", label) + normalize(text);
 					break;
 				}
@@ -784,31 +783,31 @@ class TreeList implements Component {
 			}
 			case "compaction": {
 				const tokens = Math.round(entry.tokensBefore / 1000);
-				result = theme.fg("borderAccent", `[compaction: ${tokens}k tokens]`);
+				result = theme.fg("borderAccent", `[压缩：${tokens}k token]`);
 				break;
 			}
 			case "branch_summary":
-				result = theme.fg("warning", `[branch summary]: `) + normalize(entry.summary);
+				result = theme.fg("warning", `[分支摘要]：`) + normalize(entry.summary);
 				break;
 			case "model_change":
-				result = theme.fg("dim", `[model: ${entry.model}]`);
+				result = theme.fg("dim", `[模型：${entry.model}]`);
 				break;
 			case "model_usage": {
 				const purpose = sanitizeTreeField(entry.purpose);
 				const role = sanitizeTreeField(entry.role ?? "");
 				const provider = sanitizeTreeField(entry.provider);
 				const model = sanitizeTreeField(entry.model);
-				result = theme.fg("dim", `[model usage: ${purpose} ${role ? `${role} ` : ""}${provider}/${model}]`);
+				result = theme.fg("dim", `[模型用量：${purpose} ${role ? `${role} ` : ""}${provider}/${model}]`);
 				break;
 			}
 			case "thinking_level_change":
-				result = theme.fg("dim", `[thinking: ${entry.thinkingLevel ?? ThinkingLevel.Off}]`);
+				result = theme.fg("dim", `[思考：${entry.thinkingLevel ?? ThinkingLevel.Off}]`);
 				break;
 			case "custom":
-				result = theme.fg("dim", `[custom: ${entry.customType}]`);
+				result = theme.fg("dim", `[自定义：${entry.customType}]`);
 				break;
 			case "label":
-				result = theme.fg("dim", `[label: ${entry.label ?? "(cleared)"}]`);
+				result = theme.fg("dim", `[标记：${entry.label ?? "（已清除）"}]`);
 				break;
 			case "service_tier_change": {
 				// Per-family map, or null when the session went back to the default.
@@ -816,18 +815,18 @@ class TreeList implements Component {
 					? Object.entries(entry.serviceTier)
 							.map(([family, tier]) => `${family}:${tier}`)
 							.join(" ")
-					: "(default)";
-				result = theme.fg("dim", `[service tier: ${tiers}]`);
+					: "（默认）";
+				result = theme.fg("dim", `[服务等级：${tiers}]`);
 				break;
 			}
 			case "title_change":
-				result = theme.fg("dim", `[title: ${normalize(entry.title)}]`);
+				result = theme.fg("dim", `[标题：${normalize(entry.title)}]`);
 				break;
 			case "mode_change":
-				result = theme.fg("dim", `[mode: ${entry.mode}]`);
+				result = theme.fg("dim", `[模式：${entry.mode}]`);
 				break;
 			case "credential_pin":
-				result = theme.fg("dim", `[credential pin: ${entry.provider}]`);
+				result = theme.fg("dim", `[凭据固定：${entry.provider}]`);
 				break;
 			default:
 				// Bookkeeping entries with nothing worth spelling out still get their
@@ -919,7 +918,7 @@ class TreeList implements Component {
 							: undefined;
 				const paths = toPathList(searchPathsInput);
 				const scope = paths.length > 0 ? paths.join(", ") : ".";
-				return `[grep: /${pattern}/ in ${shortenPath(scope)}]`;
+				return `[grep: /${pattern}/ 于 ${shortenPath(scope)}]`;
 			}
 			case "glob": {
 				const globInput =
@@ -1056,9 +1055,9 @@ class SearchLine implements Component {
 	render(width: number): readonly string[] {
 		const query = this.treeList.getSearchQuery();
 		if (query) {
-			return [truncateToWidth(`${theme.fg("muted", "Search:")} ${theme.fg("accent", query)}`, width)];
+			return [truncateToWidth(`${theme.fg("muted", "搜索：")} ${theme.fg("accent", query)}`, width)];
 		}
-		return [truncateToWidth(theme.fg("muted", "Search:"), width)];
+		return [truncateToWidth(theme.fg("muted", "搜索："), width)];
 	}
 
 	handleInput(_keyData: string): void {}
@@ -1084,9 +1083,9 @@ class LabelInput implements Component {
 
 	render(width: number): readonly string[] {
 		const lines: string[] = [];
-		lines.push(truncateToWidth(theme.fg("muted", "Label (empty to remove):"), width));
+		lines.push(truncateToWidth(theme.fg("muted", "标记（留空则移除）："), width));
 		lines.push(...this.#input.render(width));
-		lines.push(truncateToWidth(theme.fg("dim", "enter: save  esc: cancel"), width));
+		lines.push(truncateToWidth(theme.fg("dim", "回车: 保存  Esc: 取消"), width));
 		return lines;
 	}
 
@@ -1120,7 +1119,7 @@ export class TreeSelectorComponent extends OverlayPanel {
 		private readonly onLabelChangeCallback?: (entryId: string, label: string | undefined) => void,
 		initialFilterMode: FilterMode = "default",
 	) {
-		super("Session Tree");
+		super("会话树");
 		// The outer panel has eight fixed rows around the tree list: top/bottom
 		// borders, the two spacers, help, search, and section divider.
 		const PANEL_CHROME_ROWS = 8;
@@ -1144,7 +1143,7 @@ export class TreeSelectorComponent extends OverlayPanel {
 			new TruncatedText(
 				theme.fg(
 					"muted",
-					"Enter: switch. Alt+↑/↓: previous/next turn. PgUp/PgDn (←/→): page. Home/End: first/last item. Shift+Enter: summarize & switch. Shift+L: label. Ctrl+O: filter. Alt+D/T/U/L/A: filter. Type to search",
+					"回车: 切换。Alt+↑/↓: 上一个/下一个回合。PgUp/PgDn（←/→）: 翻页。Home/End: 第一项/最后一项。Shift+Enter: 总结并切换。Shift+L: 标记。Ctrl+O: 筛选。Alt+D/T/U/L/A: 筛选。输入文字搜索",
 				),
 				0,
 				0,

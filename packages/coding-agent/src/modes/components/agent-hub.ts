@@ -683,7 +683,7 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 			this.#section === section
 				? theme.bg("selectedBg", theme.bold(theme.fg("accent", ` ${label} `)))
 				: theme.fg("muted", ` ${label} `);
-		return `${tab("agents", "1 Agents")}${theme.fg("dim", theme.sep.dot)}${tab("activity", "2 Activity")}`;
+		return `${tab("agents", "1 代理")}${theme.fg("dim", theme.sep.dot)}${tab("activity", "2 活动")}`;
 	}
 
 	#renderActivityTable(width: number, termHeight: number): string[] {
@@ -694,26 +694,26 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 		const selectedAgent = this.#rows[this.#selectedRow]?.id;
 		const scope =
 			this.#activityScope === "all"
-				? "all agents"
+				? "所有代理"
 				: this.#activityScope === "agent"
-					? (selectedAgent ?? "selected agent")
-					: `${selectedAgent ?? "selected"} subtree`;
+					? (selectedAgent ?? "选中的代理")
+					: `${selectedAgent ?? "已选中"}子树`;
 		const search = this.#activitySearchEditing
-			? theme.fg("accent", `search: ${this.#activitySearch}▌`)
+			? theme.fg("accent", `搜索：${this.#activitySearch}▌`)
 			: this.#activitySearch
-				? `search: ${this.#activitySearch}`
-				: "search: —";
+				? `搜索：${this.#activitySearch}`
+				: "搜索：—";
 		body.push(
 			theme.fg(
 				"dim",
-				`${scope}${theme.sep.dot}${this.#activityFilter}${theme.sep.dot}${this.#activityFollow ? "following" : "paused"}${theme.sep.dot}${search}`,
+				`${scope}${theme.sep.dot}${this.#activityFilter === "all" ? "全部" : this.#activityFilter === "errors" ? "错误" : this.#activityFilter === "responses" ? "响应" : "工具"}${theme.sep.dot}${this.#activityFollow ? "跟随中" : "已暂停"}${theme.sep.dot}${search}`,
 			),
 		);
 		if (contentRows >= 8) body.push("");
 
 		const budget = Math.max(0, contentRows - body.length);
 		if (this.#activityRows.length === 0 && budget > 0) {
-			body.push(theme.fg("muted", this.#activitySearch ? "No matching activity" : "No agent activity recorded yet"));
+			body.push(theme.fg("muted", this.#activitySearch ? "无匹配的活动" : "尚无代理活动记录"));
 		} else if (budget > 0) {
 			const selected = Math.min(this.#selectedActivityRow, this.#activityRows.length - 1);
 			const start = this.#activityFollow
@@ -721,7 +721,7 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 				: Math.max(0, Math.min(selected - Math.floor(budget / 2), this.#activityRows.length - budget));
 			const end = Math.min(this.#activityRows.length, start + budget);
 			if (start > 0) {
-				body.push(theme.fg("dim", `… ${start} earlier`));
+				body.push(theme.fg("dim", `… 更早 ${start} 条`));
 			}
 			for (let index = start + Number(start > 0); index < end; index++) {
 				this.#hitRows[1 + body.length] = index;
@@ -734,13 +734,7 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 		for (const line of body.slice(0, contentRows)) lines.push(row(line, width));
 		lines.push(divider(width));
 		lines.push(
-			row(
-				theme.fg(
-					"dim",
-					"1:agents  j/k:select  Enter:transcript  Space:follow  f:filter  s:scope  /:search  Esc:close",
-				),
-				width,
-			),
+			row(theme.fg("dim", "1:代理  j/k:选择  Enter:对话记录  Space:跟随  f:筛选  s:范围  /:搜索  Esc:关闭"), width),
 		);
 		lines.push(bottomBorder(width));
 		return lines;
@@ -816,21 +810,21 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 	}
 
 	#footer(showingNarrowDetails: boolean, availableWidth: number): string {
-		const nextView = this.#viewMode === "roster" ? "by parent" : "flat";
+		const nextView = this.#viewMode === "roster" ? "按父级" : "平铺";
 		const filter =
 			this.#agentFilter.length > 0 ? `/${this.#agentFilter}${this.#agentFilterEditing ? "▌" : ""}  ·  ` : "";
 		if (showingNarrowDetails) {
 			return theme.fg(
 				"dim",
-				`${filter}1:agents  2:activity  Tab:roster  PgUp/PgDn:scroll  Enter:open  t:${nextView}  Esc:roster`,
+				`${filter}1:代理  2:活动  Tab:列表  PgUp/PgDn:滚动  Enter:打开  t:${nextView}  Esc:列表`,
 			);
 		}
 		if (availableWidth < 96) {
-			return theme.fg("dim", `${filter}j/k:select  Enter:open  t:${nextView}  Tab:details  r/x:manage  Esc:close`);
+			return theme.fg("dim", `${filter}j/k:选择  Enter:打开  t:${nextView}  Tab:详情  r/x:管理  Esc:关闭`);
 		}
 		return theme.fg(
 			"dim",
-			`${filter}1:agents  2:activity  j/k/wheel:select  PgUp/PgDn:details  Enter/click:open  t:${nextView}  r:revive  x:kill  Esc:close`,
+			`${filter}1:代理  2:活动  j/k/滚轮:选择  PgUp/PgDn:详情  Enter/点击:打开  t:${nextView}  r:恢复  x:终止  Esc:关闭`,
 		);
 	}
 
@@ -847,14 +841,14 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 		if (this.#rows.length === 0) {
 			if (this.#loadingPersistedSubagents) {
 				if (budget > 0) {
-					lines.push(`${statusGlyph("running")} ${theme.fg("accent", "Loading saved agents…")}`);
+					lines.push(`${statusGlyph("running")} ${theme.fg("accent", "正在加载已保存的代理…")}`);
 					hitRows.push(undefined);
 				}
 			} else {
 				const emptyState = [
-					`${theme.fg("muted", theme.status.shadowed)} ${theme.bold("No agents in this session")}`,
-					theme.fg("dim", "Finished, parked, and killed subagents remain with the session that created them."),
-					theme.fg("dim", "Resume that session with omp-dev --continue, or spawn a task here."),
+					`${theme.fg("muted", theme.status.shadowed)} ${theme.bold("此会话中没有代理")}`,
+					theme.fg("dim", "已完成、已挂起和已终止的子代理仍保留在创建它们的会话中。"),
+					theme.fg("dim", "使用 omp-dev --continue 恢复该会话，或在此派生任务。"),
 				];
 				for (const line of emptyState.slice(0, budget)) {
 					lines.push(line);
@@ -954,12 +948,12 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 		const showTopOverflow = start > 0 && used < budget;
 		const showBottomOverflow = end < this.#rows.length && used + Number(showTopOverflow) < budget;
 		if (showTopOverflow) {
-			lines.push(theme.fg("dim", `… ${start} more`));
+			lines.push(theme.fg("dim", `… 还有 ${start} 个`));
 			hitRows.push(undefined);
 		}
 		for (let i = start; i < end; i++) appendEntry(i);
 		if (showBottomOverflow) {
-			lines.push(theme.fg("dim", `… ${this.#rows.length - end} more`));
+			lines.push(theme.fg("dim", `… 还有 ${this.#rows.length - end} 个`));
 			hitRows.push(undefined);
 		}
 		return { lines, hitRows };
@@ -970,17 +964,17 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 		const inactive = (label: string): string => theme.fg("muted", ` ${label} `);
 		const projection =
 			this.#viewMode === "roster"
-				? `${active("Flat")}${theme.fg("dim", "/")}${inactive("By parent")}`
-				: `${inactive("Flat")}${theme.fg("dim", "/")}${active("By parent")}`;
+				? `${active("平铺")}${theme.fg("dim", "/")}${inactive("按父级")}`
+				: `${inactive("平铺")}${theme.fg("dim", "/")}${active("按父级")}`;
 		const counts = this.#statusSummary();
-		const header = `${theme.bold("Roster")}${theme.fg("dim", theme.sep.dot)}${projection}${counts ? theme.fg("dim", theme.sep.dot) + counts : ""}`;
+		const header = `${theme.bold("代理列表")}${theme.fg("dim", theme.sep.dot)}${projection}${counts ? theme.fg("dim", theme.sep.dot) + counts : ""}`;
 		const lines = wrapTextWithAnsi(header, Math.max(1, width));
 
 		const metrics = this.#aggregate;
 		if (metrics.reportedAgents === 0) {
 			lines.push(
 				...wrapTextWithAnsi(
-					theme.fg("dim", `Usage —${theme.sep.dot}0/${this.#rows.length} measured`),
+					theme.fg("dim", `用量 —${theme.sep.dot}0/${this.#rows.length} 已统计`),
 					Math.max(1, width),
 				),
 			);
@@ -989,12 +983,12 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 		const activeTime = formatMetricDuration(metrics);
 		const usage = [
 			theme.fg("statusLineCost", formatCost(metrics.cost)),
-			theme.fg("dim", activeTime ? `${activeTime} agent time` : "agent time —"),
-			theme.fg("dim", `${formatNumber(metrics.requests)} req`),
-			theme.fg("dim", `${formatNumber(metrics.tools)} tools`),
+			theme.fg("dim", activeTime ? `${activeTime} 代理耗时` : "代理耗时 —"),
+			theme.fg("dim", `${formatNumber(metrics.requests)} 请求`),
+			theme.fg("dim", `${formatNumber(metrics.tools)} 工具`),
 			theme.fg("dim", `${formatNumber(metrics.tokens)} tok`),
-			theme.fg("dim", `${metrics.activeDurationAgents}/${metrics.reportedAgents} timed`),
-			theme.fg("dim", `${metrics.reportedAgents}/${this.#rows.length} measured`),
+			theme.fg("dim", `${metrics.activeDurationAgents}/${metrics.reportedAgents} 已计时`),
+			theme.fg("dim", `${metrics.reportedAgents}/${this.#rows.length} 已统计`),
 		].join(theme.fg("dim", theme.sep.dot));
 		lines.push(...wrapTextWithAnsi(usage, Math.max(1, width)));
 		return lines;
@@ -1004,7 +998,13 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 		const parts: string[] = [];
 		for (const status of ["running", "idle", "parked", "aborted"] as const) {
 			const count = this.#statusCounts[status];
-			if (count > 0) parts.push(`${statusGlyph(status)} ${statusText(status, `${count} ${status}`)}`);
+			if (count > 0)
+				parts.push(
+					`${statusGlyph(status)} ${statusText(
+						status,
+						`${count} ${status === "running" ? "运行中" : status === "idle" ? "空闲" : status === "parked" ? "已挂起" : "已终止"}`,
+					)}`,
+				);
 		}
 		return parts.join(theme.sep.dot);
 	}
@@ -1032,7 +1032,7 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 		rows: number,
 		_observedById: ReadonlyMap<string, ObservableSession>,
 	): string[] {
-		if (!ref) return [theme.fg("dim", "Select an agent to inspect"), ...Array.from({ length: rows - 1 }, () => "")];
+		if (!ref) return [theme.fg("dim", "选择一个代理以查看"), ...Array.from({ length: rows - 1 }, () => "")];
 		const observed = this.#observableFor(ref.id);
 		const progress = observed?.progress;
 		const metrics = this.#metricsFor(ref, observed);
@@ -1053,10 +1053,19 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 		if (ref.displayName && ref.displayName !== ref.id) add(theme.fg("dim", sanitizeDisplayText(ref.id)));
 		const lifecycleDetails = [
 			metrics ? formatMetricDuration(metrics) : undefined,
-			`active ${formatAge(Math.max(1, Math.round((Date.now() - ref.lastActivity) / 1000)))}`,
+			`活跃 ${formatAge(Math.max(1, Math.round((Date.now() - ref.lastActivity) / 1000)))}`,
 		].filter(Boolean);
 		add(
-			`${statusText(ref.status, ref.status)}${theme.fg("dim", `${theme.sep.dot}${lifecycleDetails.join(theme.sep.dot)}`)}`,
+			`${statusText(
+				ref.status,
+				ref.status === "running"
+					? "运行中"
+					: ref.status === "idle"
+						? "空闲"
+						: ref.status === "parked"
+							? "已挂起"
+							: "已终止",
+			)}${theme.fg("dim", `${theme.sep.dot}${lifecycleDetails.join(theme.sep.dot)}`)}`,
 		);
 		const modelDetails: string[] = [];
 		const modelRole = progress?.modelRole ?? ref.history?.modelRole;
@@ -1067,7 +1076,7 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 
 		const task = observed?.description ?? progress?.task ?? ref.activity;
 		if (task) {
-			section("Task");
+			section("任务");
 			addWrapped(task);
 		}
 
@@ -1075,50 +1084,48 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 			? `${progress.currentTool}${progress.currentToolArgs ? ` · ${progress.currentToolArgs}` : ""}`
 			: (progress?.lastIntent ?? ref.activity);
 		if (current) {
-			section("Current");
+			section("当前");
 			addWrapped(current);
 			if (progress?.retryState) {
-				add(theme.fg("warning", `retry ${progress.retryState.attempt}/${progress.retryState.maxAttempts}`));
+				add(theme.fg("warning", `重试 ${progress.retryState.attempt}/${progress.retryState.maxAttempts}`));
 			}
 		}
 
-		section("Usage", 1);
+		section("用量", 1);
 		if (metrics) {
 			addWrapped(formatMetrics(metrics), 3);
 			if (metrics.contextTokens !== undefined && metrics.contextWindow) {
 				add(contextGauge(metrics.contextTokens, metrics.contextWindow));
 			}
 		} else {
-			add(theme.fg("dim", "usage —"));
+			add(theme.fg("dim", "用量 —"));
 		}
 
-		section("Lineage");
+		section("来源");
 		add(
-			`Spawned by ${sanitizeDisplayText(ref.parentId ?? MAIN_AGENT_ID)}${children.length > 0 ? ` · ${children.length} children` : ""}`,
+			`由 ${sanitizeDisplayText(ref.parentId ?? MAIN_AGENT_ID)} 派生${children.length > 0 ? ` · ${children.length} 个子代理` : ""}`,
 		);
 		if (children.length > 0) add(theme.fg("dim", formatChildIds(children, width)));
-		add(theme.fg("dim", `Registered ${formatLocalDateTimeWithOffset(new Date(ref.createdAt))}`));
+		add(theme.fg("dim", `注册于 ${formatLocalDateTimeWithOffset(new Date(ref.createdAt))}`));
 
-		section("Changes");
+		section("变更");
 		add(
 			theme.fg(
 				"dim",
-				ref.kind === "advisor" || ref.history?.readOnly
-					? "Read-only · 0 LoC"
-					: "Shared workspace · per-agent LoC not attributable",
+				ref.kind === "advisor" || ref.history?.readOnly ? "只读 · 0 行代码" : "共享工作区 · 无法按代理归因代码行数",
 			),
 		);
 		const artifacts = ref.history;
-		if (artifacts?.outputPath) addWrapped(`Output ${shortenPath(artifacts.outputPath)}`);
-		if (artifacts?.patchPath) addWrapped(`Patch ${shortenPath(artifacts.patchPath)}`);
-		for (const nestedPath of artifacts?.nestedPatchPaths ?? []) addWrapped(`Nested patch ${shortenPath(nestedPath)}`);
-		if (artifacts?.branchName) addWrapped(`Worktree branch ${artifacts.branchName}`);
+		if (artifacts?.outputPath) addWrapped(`输出 ${shortenPath(artifacts.outputPath)}`);
+		if (artifacts?.patchPath) addWrapped(`补丁 ${shortenPath(artifacts.patchPath)}`);
+		for (const nestedPath of artifacts?.nestedPatchPaths ?? []) addWrapped(`嵌套补丁 ${shortenPath(nestedPath)}`);
+		if (artifacts?.branchName) addWrapped(`worktree 分支 ${artifacts.branchName}`);
 
 		if (lines.length < rows) add();
-		if (lines.length < rows) add(theme.bold(theme.fg("accent", "Recent activity")));
+		if (lines.length < rows) add(theme.bold(theme.fg("accent", "最近活动")));
 		const activityBudget = Math.max(0, rows - lines.length);
 		const activity = this.#activity.recent(ref.id, activityBudget);
-		if (activity.length === 0 && activityBudget > 0) add(theme.fg("muted", "No response or tool activity yet"));
+		if (activity.length === 0 && activityBudget > 0) add(theme.fg("muted", "尚无响应或工具活动"));
 		else {
 			for (const event of activity) {
 				const title = sanitizeLine(event.kind === "tool" ? (event.toolName ?? event.title) : event.title, width);
@@ -1160,7 +1167,7 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 			fields.push(theme.fg("dim", `↳ ${sanitizeDisplayText(ref.parentId)}`));
 		}
 		if (ref.kind === "advisor") {
-			fields.push(theme.fg("warning", "read-only"));
+			fields.push(theme.fg("warning", "只读"));
 		}
 		const unread = this.#irc.unreadCount(ref.id);
 		if (unread > 0) {
@@ -1207,7 +1214,7 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 			entry.push(`${indent}${theme.fg("muted", truncateToWidth(sanitizeLine(task, detailWidth), detailWidth))}`);
 		}
 		const age = formatAge(Math.max(1, Math.round((Date.now() - ref.lastActivity) / 1000)));
-		const metadata = metrics ? formatMetricColumns(metrics, age) : `usage ${theme.sep.dot} ${age}`;
+		const metadata = metrics ? formatMetricColumns(metrics, age) : `用量 ${theme.sep.dot} ${age}`;
 		entry.push(`${metadataPrefix}${theme.fg("dim", metadata)}`);
 		if (!hovered) return entry;
 		return entry.map(lineRow => {
@@ -1493,12 +1500,12 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 		const ref = this.#rows[this.#selectedRow];
 		if (!ref) return;
 		if (ref.kind === "advisor") {
-			this.#notice = `"${ref.id}" is a read-only advisor transcript — nothing to revive.`;
+			this.#notice = `"${ref.id}" 是只读的顾问对话记录 — 无需恢复。`;
 			this.#requestRender();
 			return;
 		}
 		if (ref.status !== "parked") {
-			this.#notice = `Agent "${ref.id}" is ${ref.status} — only parked agents can be revived.`;
+			this.#notice = `代理 "${ref.id}" 当前为 ${ref.status} — 只能恢复已挂起的代理。`;
 			this.#requestRender();
 			return;
 		}
@@ -1522,7 +1529,7 @@ export class AgentHubOverlayComponent extends Container implements SelectListMou
 		const ref = this.#rows[this.#selectedRow];
 		if (!ref) return;
 		if (ref.kind === "advisor") {
-			this.#notice = `"${ref.id}" is a read-only advisor transcript — cannot be killed.`;
+			this.#notice = `"${ref.id}" 是只读的顾问对话记录 — 无法终止。`;
 			this.#requestRender();
 			return;
 		}

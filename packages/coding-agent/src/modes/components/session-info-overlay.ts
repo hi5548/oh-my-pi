@@ -3,7 +3,7 @@ import { theme } from "../theme/theme";
 import { matchesSelectCancel } from "../utils/keybinding-matchers";
 import { OverlayPanel, PanelDivider } from "./overlay-box";
 
-const FOOTER_HINT = "↑/↓ scroll · Esc close";
+const FOOTER_HINT = "↑/↓ 滚动 · Esc 关闭";
 const PANEL_CHROME_ROWS = 4;
 
 /** Terminal surface needed to size the session info viewport. */
@@ -40,7 +40,7 @@ export class SessionInfoOverlay implements Component {
 		});
 		this.#footer = new Text(FOOTER_HINT, 0, 0);
 		this.#footer.setStyleFn(text => theme.fg("dim", text));
-		this.#panel = new OverlayPanel("Session Info");
+		this.#panel = new OverlayPanel("会话信息");
 		this.#panel.addChild(this.#scrollView);
 		this.#panel.addChild(new PanelDivider());
 		this.#panel.addChild(this.#footer);

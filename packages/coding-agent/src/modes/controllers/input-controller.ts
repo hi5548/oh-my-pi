@@ -768,7 +768,7 @@ export class InputController {
 		// what the click displayed.
 		const nextId = pickRecentFocusableAgentId(scoped, this.ctx.focusedAgentId);
 		if (nextId === undefined) {
-			this.ctx.showStatus("That subagent is gone — open the hub for live agents");
+			this.ctx.showStatus("该子代理已不存在 — 打开 Hub 查看活动中的代理");
 			return;
 		}
 		this.#focusResolvedAgent(nextId);
@@ -839,7 +839,7 @@ export class InputController {
 					this.ctx.showStatus("Image paste is not supported in this prompt");
 					return;
 				}
-				await this.#normalizeAndInsertPastedImage(image, `Unsupported pasted image format: ${image.mimeType}`);
+				await this.#normalizeAndInsertPastedImage(image, `不支持的粘贴图像格式：${image.mimeType}`);
 			},
 			showStatus: message => this.ctx.showStatus(message),
 		});
@@ -1427,7 +1427,7 @@ export class InputController {
 		// as local and does not blank the editor the dequeue just restored to.
 		this.ctx.locallySubmittedUserSignatures.delete(`${popped.text}\u0000${popped.images?.length ?? 0}`);
 		this.#restoreEntriesToEditor([popped]);
-		this.ctx.showStatus("Restored last queued message to editor");
+		this.ctx.showStatus("已把最后一条排队消息恢复到编辑器");
 	}
 
 	/**
@@ -1883,7 +1883,7 @@ export class InputController {
 			const sheet = await buildVideoContactSheetPng(absolutePath, meta);
 			const preview = await this.#normalizePastedImage(
 				{ type: "image", data: sheet.png.data, mimeType: sheet.png.mimeType },
-				"Unsupported pasted video preview format",
+				"不支持的粘贴视频预览格式",
 			);
 			if (preview) await this.#insertPendingImage(preview, absolutePath);
 		} catch (error) {
@@ -1905,7 +1905,7 @@ export class InputController {
 			if (!image) return false;
 			await this.#normalizeAndInsertPastedImage(
 				{ type: "image", data: image.data.toBase64(), mimeType: image.mimeType },
-				`Unsupported clipboard image format: ${image.mimeType}`,
+				`不支持的剪贴板图像格式：${image.mimeType}`,
 			);
 			return true;
 		} catch {
@@ -1935,7 +1935,7 @@ export class InputController {
 			}
 			await this.#normalizeAndInsertPastedImage(
 				{ type: "image", data: image.data, mimeType: image.mimeType },
-				`Unsupported pasted image format: ${image.mimeType}`,
+				`不支持的粘贴图像格式：${image.mimeType}`,
 			);
 		} catch (error) {
 			if (error instanceof ImageInputTooLargeError) {
@@ -2034,7 +2034,7 @@ export class InputController {
 						data: image.data.toBase64(),
 						mimeType: image.mimeType,
 					},
-					`Unsupported clipboard image format: ${image.mimeType}`,
+					`不支持的剪贴板图像格式：${image.mimeType}`,
 				);
 			}
 			// Smart paste (#1628): no image on the clipboard — fall back to
@@ -2329,7 +2329,7 @@ export class InputController {
 			return;
 		}
 		this.setToolsExpanded(!this.ctx.toolOutputExpanded);
-		this.ctx.showStatus(`Tool output expansion: ${this.ctx.toolOutputExpanded ? "enabled" : "disabled"}`);
+		this.ctx.showStatus(`工具输出展开：${this.ctx.toolOutputExpanded ? "已启用" : "已禁用"}`);
 	}
 
 	toggleToolActivityVisibility(): void {

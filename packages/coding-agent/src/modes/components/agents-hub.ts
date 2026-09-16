@@ -1384,7 +1384,7 @@ export class AgentsHubComponent implements Component {
 		if (this.#strip) {
 			if (this.#strip.kind === "pattern") {
 				const property = this.#strip.property;
-				const values = property === "model" ? "模型匹配模式" : '“on”、“off”或模型匹配模式';
+				const values = property === "model" ? "模型匹配模式" : "“on”、“off”或模型匹配模式";
 				return `输入${values}（支持 @smol 等角色别名和 :level 后缀；留空可清除）· Esc 返回`;
 			}
 			return this.#strip.property ? "←/→ 选择 · 回车应用 · Esc 返回" : "←/→ 选择 · 回车打开 · Esc 取消";

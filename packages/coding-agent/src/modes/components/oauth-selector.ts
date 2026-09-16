@@ -84,7 +84,9 @@ export class OAuthSelectorComponent extends OverlayPanel {
 			requestRender?: () => void;
 		},
 	) {
-		super(mode === "login" ? translateUiText("Select provider to login") : translateUiText("Select provider to logout"));
+		super(
+			mode === "login" ? translateUiText("Select provider to login") : translateUiText("Select provider to logout"),
+		);
 		this.#mode = mode;
 		this.#authStorage = authStorage;
 		this.#onSelectCallback = onSelect;

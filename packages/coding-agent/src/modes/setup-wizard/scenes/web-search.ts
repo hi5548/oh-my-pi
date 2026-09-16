@@ -134,7 +134,9 @@ export class WebSearchTab implements SetupTab {
 		const label = WEB_SEARCH_ITEMS.find(item => item.value === value)?.label ?? value;
 		this.#status = [theme.fg("success", `${theme.status.success} ${translateUiText("Web search set to ")} ${label}`)];
 		if (value !== "auto" && this.#availability.get(value as SearchProviderId) === false) {
-			this.#status.push(theme.fg("dim", translateUiText("Not configured yet — add its API key or sign in to enable it.")));
+			this.#status.push(
+				theme.fg("dim", translateUiText("Not configured yet — add its API key or sign in to enable it.")),
+			);
 		}
 		this.host.requestRender();
 	}
